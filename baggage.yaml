@@ -1,0 +1,812 @@
+openapi: 3.0.4
+info:
+  title: Insomnia Airlines — Baggage API
+  description: >-
+    REST API for **Insomnia Airlines** checked baggage.
+
+
+    Each bag is identified by a 10-digit IATA bag tag and is associated with
+    a
+
+    booking (PNR) from the Bookings API and, indirectly, with the flights it
+
+    moves on (from the Flights API). Bags accumulate tracking events as they
+
+    are scanned through check-in, loading, transfers, and claim.
+
+
+    Lost or mishandled bags are tracked as separate cases under
+
+    `/lost-baggage-cases`.
+  version: 1.0.0
+  contact:
+    name: Insomnia Airlines API Team
+    email: api@insomnia-airlines.example
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: https://api.insomnia-airlines.example/v1
+    description: Production
+  - url: https://api.staging.insomnia-airlines.example/v1
+    description: Staging
+tags:
+  - name: bags
+    description: Individual checked bags and their current status.
+  - name: tracking
+    description: Bag tracking events (scans through check-in, load, transfer, claim).
+  - name: lost-baggage
+    description: Lost or mishandled baggage cases.
+paths:
+  /bags:
+    get:
+      tags:
+        - bags
+      summary: List bags.
+      description: Returns bags, optionally filtered by status, booking, flight, or
+        passenger.
+      operationId: listBags
+      parameters:
+        - name: pnr
+          in: query
+          description: Filter to bags on this booking.
+          required: false
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 6
+            pattern: ^[A-Z0-9]{6}$
+        - name: flightNumber
+          in: query
+          description: Filter to bags currently associated with this flight.
+          required: false
+          schema:
+            type: string
+            pattern: ^IA[0-9]{1,4}$
+        - name: status
+          in: query
+          description: Filter by current bag status.
+          required: false
+          schema:
+            $ref: "#/components/schemas/BagStatus"
+        - name: limit
+          in: query
+          description: Maximum number of bags to return.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bag"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      tags:
+        - bags
+      summary: Check in a bag.
+      description: |-
+        Registers a new bag against an existing booking. The bag tag is
+        generated server-side and an initial `CHECK_IN` tracking event is
+        recorded automatically.
+      operationId: checkInBag
+      requestBody:
+        description: Bag to check in.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BagInput"
+      responses:
+        "201":
+          description: Bag checked in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bag"
+        "400":
+          description: Invalid bag payload (e.g. unknown PNR or passenger, weight out of
+            range).
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /bags/{bagTag}:
+    parameters:
+      - name: bagTag
+        in: path
+        description: 10-digit IATA bag tag.
+        required: true
+        schema:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+    get:
+      tags:
+        - bags
+      summary: Get bag by tag.
+      description: Returns the current state of a bag.
+      operationId: getBag
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bag"
+        "404":
+          description: Bag not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags:
+        - bags
+      summary: Update bag fields.
+      description: |-
+        Partially updates a bag — typically used by ground staff to correct
+        weight or to change the assigned flight after a misroute.
+      operationId: patchBag
+      requestBody:
+        description: Fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BagPatch"
+      responses:
+        "200":
+          description: Bag updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bag"
+        "400":
+          description: Invalid patch payload.
+        "404":
+          description: Bag not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags:
+        - bags
+      summary: Remove a bag.
+      description: |-
+        Removes a bag record. Intended only for correcting check-in mistakes
+        before the bag has moved through the system; rejected once any
+        non-`CHECK_IN` tracking events exist.
+      operationId: deleteBag
+      responses:
+        "204":
+          description: Bag removed.
+        "404":
+          description: Bag not found.
+        "409":
+          description: Bag already has tracking history and cannot be hard-deleted.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /bags/{bagTag}/events:
+    parameters:
+      - name: bagTag
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+    get:
+      tags:
+        - tracking
+      summary: List a bag's tracking events.
+      description: Returns the chronological history of scans recorded against a bag.
+      operationId: listBagEvents
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BagEvent"
+        "404":
+          description: Bag not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      tags:
+        - tracking
+      summary: Record a tracking event.
+      description: |-
+        Records a new tracking event for a bag. The bag's current status and
+        location are updated as a side-effect based on the event type.
+      operationId: recordBagEvent
+      requestBody:
+        description: Event to record.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BagEventInput"
+      responses:
+        "201":
+          description: Event recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BagEvent"
+        "400":
+          description: Invalid event payload (e.g. unknown event type, bad airport code).
+        "404":
+          description: Bag not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /bookings/{pnr}/bags:
+    parameters:
+      - name: pnr
+        in: path
+        description: Booking PNR.
+        required: true
+        schema:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: ^[A-Z0-9]{6}$
+    get:
+      tags:
+        - bags
+      summary: List bags on a booking.
+      description: Returns all bags currently associated with a booking.
+      operationId: listBookingBags
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bag"
+        "404":
+          description: Booking not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /flights/{flightNumber}/bags:
+    parameters:
+      - name: flightNumber
+        in: path
+        description: Insomnia Airlines flight number.
+        required: true
+        schema:
+          type: string
+          pattern: ^IA[0-9]{1,4}$
+      - name: departureDate
+        in: query
+        description: Local departure date at the origin (ISO 8601 `YYYY-MM-DD`).
+          Required to disambiguate recurring flight numbers.
+        required: true
+        schema:
+          type: string
+          format: date
+    get:
+      tags:
+        - bags
+      summary: List bags on a flight.
+      description: |-
+        Returns bags currently assigned to a given flight instance. Used by
+        ground crew to reconcile what should be loaded.
+      operationId: listFlightBags
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bag"
+        "404":
+          description: Flight not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /lost-baggage-cases:
+    get:
+      tags:
+        - lost-baggage
+      summary: List lost-baggage cases.
+      description: Returns lost-baggage cases, optionally filtered by status or booking.
+      operationId: listLostBaggageCases
+      parameters:
+        - name: status
+          in: query
+          description: Filter by case status.
+          required: false
+          schema:
+            $ref: "#/components/schemas/LostBaggageCaseStatus"
+        - name: pnr
+          in: query
+          description: Filter to cases on this booking.
+          required: false
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 6
+            pattern: ^[A-Z0-9]{6}$
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LostBaggageCase"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      tags:
+        - lost-baggage
+      summary: Open a lost-baggage case.
+      description: >-
+        Opens a new lost-baggage case for a passenger. The bag tag is
+        optional
+
+        — passengers can report a missing bag they didn't keep the receipt
+
+        for, in which case staff fill in the tag later.
+      operationId: createLostBaggageCase
+      requestBody:
+        description: Case to open.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LostBaggageCaseInput"
+      responses:
+        "201":
+          description: Case opened.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostBaggageCase"
+        "400":
+          description: Invalid case payload.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /lost-baggage-cases/{caseId}:
+    parameters:
+      - name: caseId
+        in: path
+        description: Lost-baggage case identifier.
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - lost-baggage
+      summary: Get a lost-baggage case.
+      description: Returns the current state of a lost-baggage case.
+      operationId: getLostBaggageCase
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostBaggageCase"
+        "404":
+          description: Case not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags:
+        - lost-baggage
+      summary: Update a lost-baggage case.
+      description: |-
+        Partially updates a case — typically used to attach the bag tag once
+        located, advance the status, or append staff notes.
+      operationId: patchLostBaggageCase
+      requestBody:
+        description: Fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LostBaggageCasePatch"
+      responses:
+        "200":
+          description: Case updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostBaggageCase"
+        "400":
+          description: Invalid patch payload.
+        "404":
+          description: Case not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags:
+        - lost-baggage
+      summary: Close a lost-baggage case.
+      description: Closes a case. Soft-deletes by setting status to `CLOSED`.
+      operationId: closeLostBaggageCase
+      responses:
+        "204":
+          description: Case closed.
+        "404":
+          description: Case not found.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    BagStatus:
+      type: string
+      description: Current handling state of a bag.
+      enum:
+        - CHECKED_IN
+        - IN_TRANSIT
+        - LOADED
+        - ARRIVED
+        - CLAIMED
+        - DELAYED
+        - LOST
+        - DAMAGED
+    BagEventType:
+      type: string
+      description: Type of bag tracking event.
+      enum:
+        - CHECK_IN
+        - SECURITY_CLEAR
+        - LOAD
+        - UNLOAD
+        - TRANSFER
+        - CLAIM
+        - FLAG_DELAYED
+        - FLAG_LOST
+        - FLAG_DAMAGED
+    Bag:
+      type: object
+      required:
+        - bagTag
+        - pnr
+        - passengerId
+        - weightKg
+        - status
+        - checkedInAt
+      properties:
+        bagTag:
+          type: string
+          description: 10-digit IATA bag tag.
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+          example: "0074123456"
+        pnr:
+          type: string
+          description: PNR of the booking this bag belongs to.
+          minLength: 6
+          maxLength: 6
+          pattern: ^[A-Z0-9]{6}$
+          example: AB12CD
+        passengerId:
+          type: string
+          format: uuid
+          description: Passenger on the booking who owns this bag.
+        weightKg:
+          type: number
+          format: double
+          description: Weight in kilograms.
+          minimum: 0
+          maximum: 50
+          example: 18.4
+        status:
+          $ref: "#/components/schemas/BagStatus"
+        currentLocation:
+          type: string
+          description: IATA code of the airport where the bag was last scanned.
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: YYZ
+        assignedFlightNumber:
+          type: string
+          description: Flight the bag is currently assigned to, if any.
+          pattern: ^IA[0-9]{1,4}$
+          example: IA204
+        assignedDepartureDate:
+          type: string
+          format: date
+          description: Departure date of the assigned flight.
+          example: 2026-05-12
+        checkedInAt:
+          type: string
+          format: date-time
+          example: 2026-05-12T11:42:18Z
+    BagInput:
+      type: object
+      required:
+        - pnr
+        - passengerId
+        - weightKg
+      properties:
+        pnr:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: ^[A-Z0-9]{6}$
+          example: AB12CD
+        passengerId:
+          type: string
+          format: uuid
+        weightKg:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 50
+          example: 18.4
+        assignedFlightNumber:
+          type: string
+          pattern: ^IA[0-9]{1,4}$
+          example: IA204
+        assignedDepartureDate:
+          type: string
+          format: date
+          example: 2026-05-12
+    BagPatch:
+      type: object
+      description: Partial update payload for a bag. Any field omitted is left
+        unchanged.
+      properties:
+        weightKg:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 50
+        assignedFlightNumber:
+          type: string
+          pattern: ^IA[0-9]{1,4}$
+        assignedDepartureDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/BagStatus"
+    BagEvent:
+      type: object
+      required:
+        - id
+        - bagTag
+        - type
+        - location
+        - occurredAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        bagTag:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+        type:
+          $ref: "#/components/schemas/BagEventType"
+        location:
+          type: string
+          description: IATA code of the airport where the scan occurred.
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: SFO
+        flightNumber:
+          type: string
+          description: Flight associated with the event, if any (e.g. for
+            `LOAD`/`UNLOAD`).
+          pattern: ^IA[0-9]{1,4}$
+          example: IA204
+        occurredAt:
+          type: string
+          format: date-time
+          example: 2026-05-12T18:42:30Z
+        notes:
+          type: string
+          description: Free-form note captured by ground staff.
+          example: Loaded into forward cargo hold.
+    BagEventInput:
+      type: object
+      required:
+        - type
+        - location
+      properties:
+        type:
+          $ref: "#/components/schemas/BagEventType"
+        location:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: SFO
+        flightNumber:
+          type: string
+          pattern: ^IA[0-9]{1,4}$
+          example: IA204
+        occurredAt:
+          type: string
+          format: date-time
+          description: Event timestamp. Defaults to the server's now if omitted.
+          example: 2026-05-12T18:42:30Z
+        notes:
+          type: string
+          example: Transferred to inbound flight IA918.
+    LostBaggageCaseStatus:
+      type: string
+      description: Lifecycle state of a lost-baggage case.
+      enum:
+        - OPEN
+        - SEARCHING
+        - LOCATED
+        - DELIVERED
+        - CLOSED
+    LostBaggageCase:
+      type: object
+      required:
+        - caseId
+        - pnr
+        - status
+        - openedAt
+      properties:
+        caseId:
+          type: string
+          format: uuid
+        pnr:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: ^[A-Z0-9]{6}$
+          example: AB12CD
+        bagTag:
+          type: string
+          description: Bag tag, if known. May be filled in later.
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+          example: "0074123456"
+        reportedAtAirport:
+          type: string
+          description: IATA code where the passenger reported the loss.
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: SFO
+        description:
+          type: string
+          description: Description of the bag (color, brand, distinguishing marks).
+          example: Black hardshell roller, red ribbon on handle.
+        status:
+          $ref: "#/components/schemas/LostBaggageCaseStatus"
+        openedAt:
+          type: string
+          format: date-time
+          example: 2026-05-12T20:01:00Z
+        notes:
+          type: string
+          description: Free-form notes from staff handling the case.
+    LostBaggageCaseInput:
+      type: object
+      required:
+        - pnr
+        - reportedAtAirport
+        - description
+      properties:
+        pnr:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: ^[A-Z0-9]{6}$
+          example: AB12CD
+        bagTag:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+          example: "0074123456"
+        reportedAtAirport:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: SFO
+        description:
+          type: string
+          example: Black hardshell roller, red ribbon on handle.
+    LostBaggageCasePatch:
+      type: object
+      description: Partial update payload for a lost-baggage case. Any field omitted
+        is left unchanged.
+      properties:
+        bagTag:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: ^[0-9]{10}$
+        status:
+          $ref: "#/components/schemas/LostBaggageCaseStatus"
+        notes:
+          type: string
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: BAG_NOT_FOUND
+        message:
+          type: string
+          example: No bag with tag '0074123456' exists.

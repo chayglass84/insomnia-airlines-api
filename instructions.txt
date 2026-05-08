@@ -1,0 +1,84 @@
+INSOMNIA AIRLINES API — HOW TO RUN THIS THING
+==============================================
+
+TECH STACK
+----------
+Python         The programming language. You likely already have it.
+FastAPI        A Python library that turns your code into a web API.
+               It also auto-generates interactive API docs for free.
+Uvicorn        A small web server that runs the FastAPI app locally.
+               Think of it like "the thing that listens on a port."
+
+All the fake data (airports, routes, flights) lives in memory inside
+main.py. Nothing is written to disk. Restarting the server resets
+everything back to the seed data — that's intentional for now.
+
+
+STARTING THE SERVER
+-------------------
+1. Open Terminal
+2. Navigate to this folder:
+      cd ~/projects/insomnia-airlines-api
+
+3. Start the server:
+      python3 -m uvicorn main:app --reload
+
+   The "--reload" flag means the server restarts automatically whenever
+   you edit main.py. Great for development, leave it out in production.
+
+4. You'll see something like:
+      INFO:     Uvicorn running on http://127.0.0.1:8000
+
+5. Open your browser to:
+      http://localhost:8000         ← the simple endpoint reference page
+      http://localhost:8000/docs    ← interactive docs (try requests here!)
+      http://localhost:8000/redoc   ← alternative docs view
+
+6. To stop the server: press Ctrl+C in Terminal.
+
+
+INSTALLING DEPENDENCIES (first time only)
+------------------------------------------
+If you get "ModuleNotFoundError" when starting, run this first:
+      pip3 install -r requirements.txt
+
+Then try starting the server again.
+
+
+COMMON ERRORS
+-------------
+"zsh: command not found: uvicorn"
+   Don't use `uvicorn` by itself. Always use:
+      python3 -m uvicorn main:app --reload
+
+"ModuleNotFoundError: No module named 'fastapi'"
+   Run:  pip3 install -r requirements.txt
+
+"Address already in use"
+   Something is already running on port 8000.
+   Either stop that thing, or use a different port:
+      python3 -m uvicorn main:app --reload --port 8001
+   Then visit http://localhost:8001 instead.
+
+"command not found: python3"
+   Python isn't installed. Download it from https://www.python.org/downloads/
+
+
+THE DATA
+--------
+All fake data is hardcoded at the top of main.py in three dictionaries:
+   AIRPORTS  — 10 North American airports (YYZ, SFO, ORD, etc.)
+   ROUTES    — 10 city-pair routes between those airports
+   FLIGHTS   — 10 scheduled flights on 2026-05-08 and 2026-05-09
+
+To change the data, edit those dictionaries directly in main.py.
+The server will reload automatically if you started it with --reload.
+
+
+THE FILES
+---------
+main.py          The entire API — all endpoints and all data live here
+index.html       The simple reference page shown at localhost:8000
+requirements.txt The list of libraries this project needs
+flights.yaml     The original API spec this was built from
+instructions.txt This file

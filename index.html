@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insomnia Airlines API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; color: #222; padding: 2rem; }
+    h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; font-size: .95rem; }
+    .subtitle a { color: #0057b8; }
+    section { margin-bottom: 2rem; }
+    h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: .05em; color: #555; border-bottom: 2px solid #ddd; padding-bottom: .4rem; margin-bottom: .75rem; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    th { background: #f0f0f0; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; padding: .6rem 1rem; text-align: left; color: #555; }
+    td { padding: .65rem 1rem; font-size: .9rem; border-top: 1px solid #eee; vertical-align: top; }
+    tr:hover td { background: #fafafa; }
+    .method { font-weight: 700; font-size: .8rem; padding: .2rem .5rem; border-radius: 3px; white-space: nowrap; }
+    .get    { background: #e8f4fd; color: #0057b8; }
+    .post   { background: #e6f9ee; color: #1a7f3c; }
+    .put    { background: #fff8e1; color: #b45309; }
+    .patch  { background: #f3e8ff; color: #7c3aed; }
+    .delete { background: #fee2e2; color: #b91c1c; }
+    code { background: #f0f0f0; padding: .1em .35em; border-radius: 3px; font-size: .85em; font-family: "SF Mono", "Fira Code", monospace; }
+    .params { font-size: .82rem; color: #555; }
+    .params span { display: inline-block; background: #f0f0f0; border-radius: 3px; padding: .1rem .4rem; margin: .15rem .2rem .15rem 0; }
+    .params span.required { background: #fff0e0; color: #b45309; }
+    .note { font-size: .8rem; color: #888; font-style: italic; margin-top: .25rem; }
+  </style>
+</head>
+<body>
+  <h1>Insomnia Airlines API</h1>
+  <p class="subtitle">
+    Running at <code>http://localhost:8000</code> &mdash;
+    Interactive docs: <a href="/docs">/docs</a> &nbsp;|&nbsp; <a href="/redoc">/redoc</a>
+  </p>
+
+  <section>
+    <h2>Airports</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/airports</code></td>
+          <td class="params">
+            <span>country <em>(ISO 3166-1 alpha-2)</em></span>
+            <span>limit <em>(1–100, default 50)</em></span>
+          </td>
+          <td>List all airports, optionally filtered by country</td>
+        </tr>
+        <tr>
+          <td><span class="method post">POST</span></td>
+          <td><code>/airports</code></td>
+          <td class="params"><span>body: Airport JSON</span></td>
+          <td>Register a new airport</td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/airports/{iataCode}</code></td>
+          <td class="params"><span class="required">iataCode (path)</span></td>
+          <td>Get a single airport by IATA code (e.g. <code>YYZ</code>)</td>
+        </tr>
+        <tr>
+          <td><span class="method put">PUT</span></td>
+          <td><code>/airports/{iataCode}</code></td>
+          <td class="params"><span class="required">iataCode (path)</span> <span>body: Airport JSON</span></td>
+          <td>Replace an airport's details</td>
+        </tr>
+        <tr>
+          <td><span class="method delete">DELETE</span></td>
+          <td><code>/airports/{iataCode}</code></td>
+          <td class="params"><span class="required">iataCode (path)</span></td>
+          <td>Remove an airport (fails if active routes reference it)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Routes</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/routes</code></td>
+          <td class="params">
+            <span>origin <em>(IATA code)</em></span>
+            <span>destination <em>(IATA code)</em></span>
+          </td>
+          <td>List published routes, optionally filtered by origin/destination</td>
+        </tr>
+        <tr>
+          <td><span class="method post">POST</span></td>
+          <td><code>/routes</code></td>
+          <td class="params"><span>body: RouteInput JSON</span></td>
+          <td>Publish a new city-pair route</td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/routes/{routeId}</code></td>
+          <td class="params"><span class="required">routeId (path, UUID)</span></td>
+          <td>Get a single route by ID</td>
+        </tr>
+        <tr>
+          <td><span class="method delete">DELETE</span></td>
+          <td><code>/routes/{routeId}</code></td>
+          <td class="params"><span class="required">routeId (path, UUID)</span></td>
+          <td>Withdraw a route (fails if future flights reference it)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Flights</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/flights</code></td>
+          <td class="params">
+            <span>origin</span>
+            <span>destination</span>
+            <span>departureDate <em>(YYYY-MM-DD)</em></span>
+            <span>status</span>
+            <span>limit <em>(1–200, default 50)</em></span>
+          </td>
+          <td>List scheduled flights</td>
+        </tr>
+        <tr>
+          <td><span class="method post">POST</span></td>
+          <td><code>/flights</code></td>
+          <td class="params"><span>body: FlightInput JSON</span></td>
+          <td>Schedule a new flight instance</td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/flights/{flightNumber}</code></td>
+          <td class="params">
+            <span class="required">flightNumber (path, e.g. IA204)</span>
+            <span class="required">departureDate (query, YYYY-MM-DD)</span>
+          </td>
+          <td>Get a specific flight by number and date</td>
+        </tr>
+        <tr>
+          <td><span class="method patch">PATCH</span></td>
+          <td><code>/flights/{flightNumber}</code></td>
+          <td class="params">
+            <span class="required">flightNumber (path)</span>
+            <span class="required">departureDate (query)</span>
+            <span>body: FlightPatch JSON</span>
+          </td>
+          <td>Update status, gate, or times</td>
+        </tr>
+        <tr>
+          <td><span class="method delete">DELETE</span></td>
+          <td><code>/flights/{flightNumber}</code></td>
+          <td class="params">
+            <span class="required">flightNumber (path)</span>
+            <span class="required">departureDate (query)</span>
+          </td>
+          <td>Cancel a flight (soft-delete, sets status to CANCELLED)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">Flight statuses: SCHEDULED · BOARDING · DEPARTED · ARRIVED · DELAYED · CANCELLED</p>
+  </section>
+
+  <section>
+    <h2>Request body shapes</h2>
+    <table>
+      <thead><tr><th>Schema</th><th>Required fields</th><th>Optional fields</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Airport</strong></td>
+          <td><code>iataCode</code> <code>name</code> <code>city</code> <code>country</code> <code>timezone</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>RouteInput</strong></td>
+          <td><code>origin</code> <code>destination</code> <code>blockTimeMinutes</code></td>
+          <td><code>distanceNauticalMiles</code></td>
+        </tr>
+        <tr>
+          <td><strong>FlightInput</strong></td>
+          <td><code>flightNumber</code> <code>departureDate</code> <code>routeId</code> <code>aircraftTailNumber</code> <code>scheduledDeparture</code> <code>scheduledArrival</code></td>
+          <td><code>gate</code></td>
+        </tr>
+        <tr>
+          <td><strong>FlightPatch</strong></td>
+          <td>—</td>
+          <td><code>scheduledDeparture</code> <code>scheduledArrival</code> <code>aircraftTailNumber</code> <code>gate</code> <code>status</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</body>
+</html>
