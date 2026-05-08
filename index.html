@@ -26,7 +26,9 @@
     .params { font-size: .82rem; color: #555; }
     .params span { display: inline-block; background: #f0f0f0; border-radius: 3px; padding: .1rem .4rem; margin: .15rem .2rem .15rem 0; }
     .params span.required { background: #fff0e0; color: #b45309; }
-    .note { font-size: .8rem; color: #888; font-style: italic; margin-top: .25rem; }
+    .note { font-size: .8rem; color: #888; font-style: italic; margin-top: .4rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -36,44 +38,17 @@
     Interactive docs: <a href="/docs">/docs</a> &nbsp;|&nbsp; <a href="/redoc">/redoc</a>
   </p>
 
+  <!-- FLIGHTS -->
   <section>
     <h2>Airports</h2>
     <table>
       <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
       <tbody>
-        <tr>
-          <td><span class="method get">GET</span></td>
-          <td><code>/airports</code></td>
-          <td class="params">
-            <span>country <em>(ISO 3166-1 alpha-2)</em></span>
-            <span>limit <em>(1–100, default 50)</em></span>
-          </td>
-          <td>List all airports, optionally filtered by country</td>
-        </tr>
-        <tr>
-          <td><span class="method post">POST</span></td>
-          <td><code>/airports</code></td>
-          <td class="params"><span>body: Airport JSON</span></td>
-          <td>Register a new airport</td>
-        </tr>
-        <tr>
-          <td><span class="method get">GET</span></td>
-          <td><code>/airports/{iataCode}</code></td>
-          <td class="params"><span class="required">iataCode (path)</span></td>
-          <td>Get a single airport by IATA code (e.g. <code>YYZ</code>)</td>
-        </tr>
-        <tr>
-          <td><span class="method put">PUT</span></td>
-          <td><code>/airports/{iataCode}</code></td>
-          <td class="params"><span class="required">iataCode (path)</span> <span>body: Airport JSON</span></td>
-          <td>Replace an airport's details</td>
-        </tr>
-        <tr>
-          <td><span class="method delete">DELETE</span></td>
-          <td><code>/airports/{iataCode}</code></td>
-          <td class="params"><span class="required">iataCode (path)</span></td>
-          <td>Remove an airport (fails if active routes reference it)</td>
-        </tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/airports</code></td><td class="params"><span>country</span> <span>limit</span></td><td>List airports</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/airports</code></td><td class="params"><span>body: Airport</span></td><td>Add an airport</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/airports/{iataCode}</code></td><td class="params"><span class="required">iataCode (path)</span></td><td>Get airport</td></tr>
+        <tr><td><span class="method put">PUT</span></td><td><code>/airports/{iataCode}</code></td><td class="params"><span class="required">iataCode (path)</span> <span>body: Airport</span></td><td>Replace airport details</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/airports/{iataCode}</code></td><td class="params"><span class="required">iataCode (path)</span></td><td>Remove airport (fails if routes reference it)</td></tr>
       </tbody>
     </table>
   </section>
@@ -83,33 +58,10 @@
     <table>
       <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
       <tbody>
-        <tr>
-          <td><span class="method get">GET</span></td>
-          <td><code>/routes</code></td>
-          <td class="params">
-            <span>origin <em>(IATA code)</em></span>
-            <span>destination <em>(IATA code)</em></span>
-          </td>
-          <td>List published routes, optionally filtered by origin/destination</td>
-        </tr>
-        <tr>
-          <td><span class="method post">POST</span></td>
-          <td><code>/routes</code></td>
-          <td class="params"><span>body: RouteInput JSON</span></td>
-          <td>Publish a new city-pair route</td>
-        </tr>
-        <tr>
-          <td><span class="method get">GET</span></td>
-          <td><code>/routes/{routeId}</code></td>
-          <td class="params"><span class="required">routeId (path, UUID)</span></td>
-          <td>Get a single route by ID</td>
-        </tr>
-        <tr>
-          <td><span class="method delete">DELETE</span></td>
-          <td><code>/routes/{routeId}</code></td>
-          <td class="params"><span class="required">routeId (path, UUID)</span></td>
-          <td>Withdraw a route (fails if future flights reference it)</td>
-        </tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/routes</code></td><td class="params"><span>origin</span> <span>destination</span></td><td>List published routes</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/routes</code></td><td class="params"><span>body: RouteInput</span></td><td>Publish a route</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/routes/{routeId}</code></td><td class="params"><span class="required">routeId (path, UUID)</span></td><td>Get route</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/routes/{routeId}</code></td><td class="params"><span class="required">routeId (path, UUID)</span></td><td>Withdraw route (fails if future flights reference it)</td></tr>
       </tbody>
     </table>
   </section>
@@ -119,84 +71,125 @@
     <table>
       <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
       <tbody>
-        <tr>
-          <td><span class="method get">GET</span></td>
-          <td><code>/flights</code></td>
-          <td class="params">
-            <span>origin</span>
-            <span>destination</span>
-            <span>departureDate <em>(YYYY-MM-DD)</em></span>
-            <span>status</span>
-            <span>limit <em>(1–200, default 50)</em></span>
-          </td>
-          <td>List scheduled flights</td>
-        </tr>
-        <tr>
-          <td><span class="method post">POST</span></td>
-          <td><code>/flights</code></td>
-          <td class="params"><span>body: FlightInput JSON</span></td>
-          <td>Schedule a new flight instance</td>
-        </tr>
-        <tr>
-          <td><span class="method get">GET</span></td>
-          <td><code>/flights/{flightNumber}</code></td>
-          <td class="params">
-            <span class="required">flightNumber (path, e.g. IA204)</span>
-            <span class="required">departureDate (query, YYYY-MM-DD)</span>
-          </td>
-          <td>Get a specific flight by number and date</td>
-        </tr>
-        <tr>
-          <td><span class="method patch">PATCH</span></td>
-          <td><code>/flights/{flightNumber}</code></td>
-          <td class="params">
-            <span class="required">flightNumber (path)</span>
-            <span class="required">departureDate (query)</span>
-            <span>body: FlightPatch JSON</span>
-          </td>
-          <td>Update status, gate, or times</td>
-        </tr>
-        <tr>
-          <td><span class="method delete">DELETE</span></td>
-          <td><code>/flights/{flightNumber}</code></td>
-          <td class="params">
-            <span class="required">flightNumber (path)</span>
-            <span class="required">departureDate (query)</span>
-          </td>
-          <td>Cancel a flight (soft-delete, sets status to CANCELLED)</td>
-        </tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/flights</code></td><td class="params"><span>origin</span> <span>destination</span> <span>departureDate</span> <span>status</span> <span>limit</span></td><td>List flights</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/flights</code></td><td class="params"><span>body: FlightInput</span></td><td>Schedule a flight</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/flights/{flightNumber}</code></td><td class="params"><span class="required">flightNumber (path)</span> <span class="required">departureDate (query)</span></td><td>Get flight</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td><code>/flights/{flightNumber}</code></td><td class="params"><span class="required">flightNumber (path)</span> <span class="required">departureDate (query)</span> <span>body: FlightPatch</span></td><td>Update status, gate, or times</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/flights/{flightNumber}</code></td><td class="params"><span class="required">flightNumber (path)</span> <span class="required">departureDate (query)</span></td><td>Cancel flight (sets status CANCELLED)</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/flights/{flightNumber}/bags</code></td><td class="params"><span class="required">flightNumber (path)</span> <span class="required">departureDate (query)</span></td><td>List bags loaded on a flight</td></tr>
       </tbody>
     </table>
     <p class="note">Flight statuses: SCHEDULED · BOARDING · DEPARTED · ARRIVED · DELAYED · CANCELLED</p>
   </section>
 
+  <!-- BOOKINGS -->
+  <section>
+    <h2>Bookings</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td><code>/bookings</code></td><td class="params"><span>status</span> <span>frequentFlyerId</span> <span>flightNumber</span> <span>limit</span></td><td>List bookings</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/bookings</code></td><td class="params"><span>body: BookingInput</span></td><td>Create booking (PNR auto-generated)</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/bookings/{pnr}</code></td><td class="params"><span class="required">pnr (path)</span></td><td>Get booking</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td><code>/bookings/{pnr}</code></td><td class="params"><span class="required">pnr (path)</span> <span>body: BookingPatch</span></td><td>Update status or contact email</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/bookings/{pnr}</code></td><td class="params"><span class="required">pnr (path)</span></td><td>Cancel booking (sets status CANCELLED)</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/bookings/{pnr}/bags</code></td><td class="params"><span class="required">pnr (path)</span></td><td>List bags on a booking</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Booking statuses: HELD · CONFIRMED · CHECKED_IN · FLOWN · CANCELLED</p>
+  </section>
+
+  <section>
+    <h2>Passengers</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td><code>/bookings/{pnr}/passengers</code></td><td class="params"><span class="required">pnr (path)</span></td><td>List passengers on a booking</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/bookings/{pnr}/passengers</code></td><td class="params"><span class="required">pnr (path)</span> <span>body: PassengerInput</span></td><td>Add a passenger</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/bookings/{pnr}/passengers/{passengerId}</code></td><td class="params"><span class="required">pnr (path)</span> <span class="required">passengerId (path, UUID)</span></td><td>Get passenger</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/bookings/{pnr}/passengers/{passengerId}</code></td><td class="params"><span class="required">pnr (path)</span> <span class="required">passengerId (path, UUID)</span></td><td>Remove passenger (fails if last on booking)</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/passengers/{frequentFlyerId}</code></td><td class="params"><span class="required">frequentFlyerId (path, e.g. FF1029384)</span></td><td>Get frequent-flyer profile</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/passengers/{frequentFlyerId}/bookings</code></td><td class="params"><span class="required">frequentFlyerId (path)</span> <span>status</span></td><td>List a frequent flyer's bookings</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Seats</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td><code>/bookings/{pnr}/seats</code></td><td class="params"><span class="required">pnr (path)</span></td><td>List all seat assignments on a booking</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/bookings/{pnr}/seats</code></td><td class="params"><span class="required">pnr (path)</span> <span>body: SeatAssignmentInput</span></td><td>Assign a seat</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td><code>/bookings/{pnr}/seats/{seatAssignmentId}</code></td><td class="params"><span class="required">pnr (path)</span> <span class="required">seatAssignmentId (path, UUID)</span> <span>body: SeatAssignmentPatch</span></td><td>Change seat number</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/bookings/{pnr}/seats/{seatAssignmentId}</code></td><td class="params"><span class="required">pnr (path)</span> <span class="required">seatAssignmentId (path, UUID)</span></td><td>Release seat assignment</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- BAGGAGE -->
+  <section>
+    <h2>Bags</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td><code>/bags</code></td><td class="params"><span>pnr</span> <span>flightNumber</span> <span>status</span> <span>limit</span></td><td>List bags</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/bags</code></td><td class="params"><span>body: BagInput</span></td><td>Check in a bag (bag tag auto-generated)</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/bags/{bagTag}</code></td><td class="params"><span class="required">bagTag (path, 10 digits)</span></td><td>Get bag</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td><code>/bags/{bagTag}</code></td><td class="params"><span class="required">bagTag (path)</span> <span>body: BagPatch</span></td><td>Update weight, flight assignment, or status</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/bags/{bagTag}</code></td><td class="params"><span class="required">bagTag (path)</span></td><td>Remove bag (fails if it has tracking history)</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Bag statuses: CHECKED_IN · IN_TRANSIT · LOADED · ARRIVED · CLAIMED · DELAYED · LOST · DAMAGED</p>
+  </section>
+
+  <section>
+    <h2>Bag tracking</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td><code>/bags/{bagTag}/events</code></td><td class="params"><span class="required">bagTag (path)</span></td><td>List tracking events for a bag</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/bags/{bagTag}/events</code></td><td class="params"><span class="required">bagTag (path)</span> <span>body: BagEventInput</span></td><td>Record a scan event (updates bag status as side-effect)</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Event types: CHECK_IN · SECURITY_CLEAR · LOAD · UNLOAD · TRANSFER · CLAIM · FLAG_DELAYED · FLAG_LOST · FLAG_DAMAGED</p>
+  </section>
+
+  <section>
+    <h2>Lost baggage</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Params</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><span class="method get">GET</span></td><td><code>/lost-baggage-cases</code></td><td class="params"><span>status</span> <span>pnr</span></td><td>List lost-baggage cases</td></tr>
+        <tr><td><span class="method post">POST</span></td><td><code>/lost-baggage-cases</code></td><td class="params"><span>body: LostBaggageCaseInput</span></td><td>Open a case (bag tag optional)</td></tr>
+        <tr><td><span class="method get">GET</span></td><td><code>/lost-baggage-cases/{caseId}</code></td><td class="params"><span class="required">caseId (path, UUID)</span></td><td>Get case</td></tr>
+        <tr><td><span class="method patch">PATCH</span></td><td><code>/lost-baggage-cases/{caseId}</code></td><td class="params"><span class="required">caseId (path, UUID)</span> <span>body: LostBaggageCasePatch</span></td><td>Update status, attach bag tag, or add notes</td></tr>
+        <tr><td><span class="method delete">DELETE</span></td><td><code>/lost-baggage-cases/{caseId}</code></td><td class="params"><span class="required">caseId (path, UUID)</span></td><td>Close case (sets status CLOSED)</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Case statuses: OPEN · SEARCHING · LOCATED · DELIVERED · CLOSED</p>
+  </section>
+
+  <!-- SCHEMA QUICK REF -->
   <section>
     <h2>Request body shapes</h2>
     <table>
       <thead><tr><th>Schema</th><th>Required fields</th><th>Optional fields</th></tr></thead>
       <tbody>
-        <tr>
-          <td><strong>Airport</strong></td>
-          <td><code>iataCode</code> <code>name</code> <code>city</code> <code>country</code> <code>timezone</code></td>
-          <td>—</td>
-        </tr>
-        <tr>
-          <td><strong>RouteInput</strong></td>
-          <td><code>origin</code> <code>destination</code> <code>blockTimeMinutes</code></td>
-          <td><code>distanceNauticalMiles</code></td>
-        </tr>
-        <tr>
-          <td><strong>FlightInput</strong></td>
-          <td><code>flightNumber</code> <code>departureDate</code> <code>routeId</code> <code>aircraftTailNumber</code> <code>scheduledDeparture</code> <code>scheduledArrival</code></td>
-          <td><code>gate</code></td>
-        </tr>
-        <tr>
-          <td><strong>FlightPatch</strong></td>
-          <td>—</td>
-          <td><code>scheduledDeparture</code> <code>scheduledArrival</code> <code>aircraftTailNumber</code> <code>gate</code> <code>status</code></td>
-        </tr>
+        <tr><td><strong>Airport</strong></td><td><code>iataCode</code> <code>name</code> <code>city</code> <code>country</code> <code>timezone</code></td><td>—</td></tr>
+        <tr><td><strong>RouteInput</strong></td><td><code>origin</code> <code>destination</code> <code>blockTimeMinutes</code></td><td><code>distanceNauticalMiles</code></td></tr>
+        <tr><td><strong>FlightInput</strong></td><td><code>flightNumber</code> <code>departureDate</code> <code>routeId</code> <code>aircraftTailNumber</code> <code>scheduledDeparture</code> <code>scheduledArrival</code></td><td><code>gate</code></td></tr>
+        <tr><td><strong>FlightPatch</strong></td><td>—</td><td><code>scheduledDeparture</code> <code>scheduledArrival</code> <code>aircraftTailNumber</code> <code>gate</code> <code>status</code></td></tr>
+        <tr><td><strong>BookingInput</strong></td><td><code>passengers[]</code> <code>segments[]</code></td><td><code>contactEmail</code></td></tr>
+        <tr><td><strong>PassengerInput</strong></td><td><code>firstName</code> <code>lastName</code></td><td><code>email</code> <code>phone</code> <code>frequentFlyerId</code> <code>dateOfBirth</code></td></tr>
+        <tr><td><strong>FlightSegmentInput</strong></td><td><code>flightNumber</code> <code>departureDate</code> <code>travelClass</code></td><td>—</td></tr>
+        <tr><td><strong>SeatAssignmentInput</strong></td><td><code>passengerId</code> <code>segmentIndex</code> <code>seatNumber</code></td><td>—</td></tr>
+        <tr><td><strong>BagInput</strong></td><td><code>pnr</code> <code>passengerId</code> <code>weightKg</code></td><td><code>assignedFlightNumber</code> <code>assignedDepartureDate</code></td></tr>
+        <tr><td><strong>BagEventInput</strong></td><td><code>type</code> <code>location</code></td><td><code>flightNumber</code> <code>occurredAt</code> <code>notes</code></td></tr>
+        <tr><td><strong>LostBaggageCaseInput</strong></td><td><code>pnr</code> <code>reportedAtAirport</code> <code>description</code></td><td><code>bagTag</code></td></tr>
       </tbody>
     </table>
   </section>
+
 </body>
 </html>
