@@ -66,19 +66,53 @@ COMMON ERRORS
 
 THE DATA
 --------
-All fake data is hardcoded at the top of main.py in three dictionaries:
-   AIRPORTS  — 10 North American airports (YYZ, SFO, ORD, etc.)
-   ROUTES    — 10 city-pair routes between those airports
-   FLIGHTS   — 10 scheduled flights on 2026-05-08 and 2026-05-09
+All fake data is hardcoded near the top of main.py in these dictionaries:
+
+   AIRPORTS             10 North American airports (YYZ, SFO, ORD, etc.)
+   ROUTES               10 city-pair routes between those airports
+   FLIGHTS              10 scheduled flights on 2026-05-08 and 2026-05-09
+   FREQUENT_FLYERS      2 profiles: FF1029384 (Alex Morgan), FF2938475 (Sam Taylor)
+   BOOKINGS             5 bookings with PNRs: AB12CD, EF34GH, IJ56KL, MN78OP, QR90ST
+   SEAT_ASSIGNMENTS     3 seat assignments across those bookings
+   BAGS                 6 bags linked to real PNRs and flights
+   BAG_EVENTS           Tracking history for each bag (check-in, load, claim, etc.)
+   LOST_BAGGAGE_CASES   2 cases: one SEARCHING (Lisa Park's roller bag), one OPEN
 
 To change the data, edit those dictionaries directly in main.py.
 The server will reload automatically if you started it with --reload.
+
+KEY IDs TO KNOW (useful when calling endpoints manually)
+---------------------------------------------------------
+PNRs (booking codes):
+   AB12CD  — Alex Morgan + Sam Taylor, IA204 YYZ→ORD, CONFIRMED
+   EF34GH  — Jordan Lee, IA101 YYZ→SFO business class, CONFIRMED
+   IJ56KL  — Maria Santos, IA933 YYZ→SFO (tomorrow), HELD
+   MN78OP  — David Chen, IA530 YUL→FLL, FLOWN
+   QR90ST  — Lisa Park, IA315 YYZ→IAD, CANCELLED
+
+Frequent flyer IDs:
+   FF1029384  Alex Morgan (GOLD, 48,230 miles)
+   FF2938475  Sam Taylor (SILVER, 12,500 miles)
+
+Bag tags (10-digit numbers):
+   0074123456  Alex Morgan's bag, LOADED on IA204
+   0074123457  Sam Taylor's bag, LOADED on IA204
+   0074234567  Jordan Lee's bag, LOADED on IA101
+   0074345678  David Chen's bag, CLAIMED at FLL
+   0074456789  Maria Santos's bag, CHECKED_IN for tomorrow
+   0074567890  Lisa Park's bag, LOST at ORD
+
+Lost baggage case IDs:
+   c1000001-0000-0000-0000-000000000000  Lisa Park's roller bag, SEARCHING
+   c1000002-0000-0000-0000-000000000000  David Chen's duffel, OPEN
 
 
 THE FILES
 ---------
 main.py          The entire API — all endpoints and all data live here
-index.html       The simple reference page shown at localhost:8000
+index.html       The reference page shown at localhost:8000 (includes demo URLs)
 requirements.txt The list of libraries this project needs
-flights.yaml     The original API spec this was built from
+flights.yaml     OpenAPI spec for airports, routes, and flights
+bookings.yaml    OpenAPI spec for bookings, passengers, and seats
+baggage.yaml     OpenAPI spec for bags, tracking events, and lost baggage
 instructions.txt This file

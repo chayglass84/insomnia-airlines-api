@@ -38,6 +38,79 @@
     Interactive docs: <a href="/docs">/docs</a> &nbsp;|&nbsp; <a href="/redoc">/redoc</a>
   </p>
 
+  <!-- DEMO SCENARIOS -->
+  <section>
+    <h2>Demo scenarios</h2>
+    <p style="font-size:.85rem;color:#666;margin-bottom:.75rem;">Click any link to try it. POST/PATCH/DELETE calls need <a href="/docs">/docs</a> — use the IDs below to fill in the fields.</p>
+    <table>
+      <thead><tr><th>What it shows</th><th>URL</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>All today's flights from YYZ</strong></td>
+          <td><a href="/flights?origin=YYZ&departureDate=2026-05-08"><code>/flights?origin=YYZ&amp;departureDate=2026-05-08</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Flights currently boarding</strong></td>
+          <td><a href="/flights?status=BOARDING"><code>/flights?status=BOARDING</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Canadian airports only</strong></td>
+          <td><a href="/airports?country=CA"><code>/airports?country=CA</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>All routes out of YYZ</strong></td>
+          <td><a href="/routes?origin=YYZ"><code>/routes?origin=YYZ</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Jordan Lee's business class booking</strong> (EF34GH)</td>
+          <td><a href="/bookings/EF34GH"><code>/bookings/EF34GH</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Alex Morgan's frequent flyer profile</strong> (GOLD, 48k miles)</td>
+          <td><a href="/passengers/FF1029384"><code>/passengers/FF1029384</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Alex Morgan's bookings via frequent flyer ID</strong></td>
+          <td><a href="/passengers/FF1029384/bookings"><code>/passengers/FF1029384/bookings</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Seat assignments on Alex &amp; Sam's booking</strong> (AB12CD — 14C and 14D)</td>
+          <td><a href="/bookings/AB12CD/seats"><code>/bookings/AB12CD/seats</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>All bags loaded on IA204 today</strong> (Alex &amp; Sam's bags)</td>
+          <td><a href="/flights/IA204/bags?departureDate=2026-05-08"><code>/flights/IA204/bags?departureDate=2026-05-08</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>All bags on booking AB12CD</strong></td>
+          <td><a href="/bookings/AB12CD/bags"><code>/bookings/AB12CD/bags</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Full tracking history for Alex Morgan's bag</strong> (check-in → security → loaded)</td>
+          <td><a href="/bags/0074123456/events"><code>/bags/0074123456/events</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>David Chen's bag — claimed at FLL</strong></td>
+          <td><a href="/bags/0074345678"><code>/bags/0074345678</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Lisa Park's lost roller bag case</strong> (status: SEARCHING)</td>
+          <td><a href="/lost-baggage-cases/c1000001-0000-0000-0000-000000000000"><code>/lost-baggage-cases/c1000001-0000-0000-0000-000000000000</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>All open/searching lost baggage cases</strong></td>
+          <td><a href="/lost-baggage-cases?status=SEARCHING"><code>/lost-baggage-cases?status=SEARCHING</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Maria Santos's bag checked in for tomorrow's flight</strong></td>
+          <td><a href="/bags/0074456789"><code>/bags/0074456789</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr style="border:none;border-top:2px solid #ddd;margin:2rem 0;" />
+
   <!-- FLIGHTS -->
   <section>
     <h2>Airports</h2>
