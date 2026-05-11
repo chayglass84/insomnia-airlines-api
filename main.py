@@ -323,6 +323,17 @@ _SEED_ROUTES = {r["id"]: r for r in [
     {"id": "a09c64f7-4f89-11d3-9a0c-0305e82c3308", "origin": "SFO", "destination": "IAH", "distanceNauticalMiles": 1640, "blockTimeMinutes": 210},
     {"id": "b1ad74f8-4f89-11d3-9a0c-0305e82c3309", "origin": "ORD", "destination": "IAH", "distanceNauticalMiles":  925, "blockTimeMinutes": 130},
     {"id": "c2be84f9-4f89-11d3-9a0c-0305e82c3310", "origin": "BOS", "destination": "IAD", "distanceNauticalMiles":  400, "blockTimeMinutes":  75},
+    # Reverse routes
+    {"id": "d3cf94fa-4f89-11d3-9a0c-0305e82c3311", "origin": "SFO", "destination": "YYZ", "distanceNauticalMiles": 1850, "blockTimeMinutes": 305},
+    {"id": "e4d0a4fb-4f89-11d3-9a0c-0305e82c3312", "origin": "ORD", "destination": "YYZ", "distanceNauticalMiles":  360, "blockTimeMinutes":  90},
+    {"id": "f5e1b4fc-4f89-11d3-9a0c-0305e82c3313", "origin": "IAD", "destination": "YYZ", "distanceNauticalMiles":  330, "blockTimeMinutes":  95},
+    {"id": "06f2c4fd-4f89-11d3-9a0c-0305e82c3314", "origin": "BOS", "destination": "YYZ", "distanceNauticalMiles":  290, "blockTimeMinutes":  80},
+    {"id": "1703d4fe-4f89-11d3-9a0c-0305e82c3315", "origin": "FLL", "destination": "YUL", "distanceNauticalMiles": 1280, "blockTimeMinutes": 195},
+    {"id": "2814e4ff-4f89-11d3-9a0c-0305e82c3316", "origin": "SEA", "destination": "YVR", "distanceNauticalMiles":  125, "blockTimeMinutes":  45},
+    {"id": "3925f500-4f89-11d3-9a0c-0305e82c3317", "origin": "ORD", "destination": "YVR", "distanceNauticalMiles": 1605, "blockTimeMinutes": 245},
+    {"id": "4a360501-4f89-11d3-9a0c-0305e82c3318", "origin": "IAH", "destination": "SFO", "distanceNauticalMiles": 1640, "blockTimeMinutes": 210},
+    {"id": "5b471502-4f89-11d3-9a0c-0305e82c3319", "origin": "IAH", "destination": "ORD", "distanceNauticalMiles":  925, "blockTimeMinutes": 130},
+    {"id": "6c582503-4f89-11d3-9a0c-0305e82c3320", "origin": "IAD", "destination": "BOS", "distanceNauticalMiles":  400, "blockTimeMinutes":  75},
 ]}
 
 # Stored as a list so _shift can replace dates before we re-key by (flightNumber, departureDate).
@@ -548,19 +559,22 @@ def list_airports(country: Optional[str] = None, limit: int = Query(50, ge=1, le
 
 @app.post("/airports", response_model=Airport, status_code=201, tags=["airports"])
 def create_airport(body: Airport):
-    if body.iataCode in AIRPORTS:
-        raise HTTPException(409, {"code": "AIRPORT_EXISTS", "message": f"Airport '{body.iataCode}' already exists."})
-    AIRPORTS[body.iataCode] = body.model_dump()
-    return AIRPORTS[body.iataCode]
+    code = body.iataCode.upper()
+    if code in AIRPORTS:
+        raise HTTPException(409, {"code": "AIRPORT_EXISTS", "message": f"Airport '{code}' already exists."})
+    AIRPORTS[code] = {**body.model_dump(), "iataCode": code}
+    return AIRPORTS[code]
 
 @app.get("/airports/{iataCode}", response_model=Airport, tags=["airports"])
 def get_airport(iataCode: str):
+    iataCode = iataCode.upper()
     if iataCode not in AIRPORTS:
         raise HTTPException(404, {"code": "AIRPORT_NOT_FOUND", "message": f"No airport with IATA code '{iataCode}'."})
     return AIRPORTS[iataCode]
 
 @app.put("/airports/{iataCode}", response_model=Airport, tags=["airports"])
 def update_airport(iataCode: str, body: Airport):
+    iataCode = iataCode.upper()
     if iataCode not in AIRPORTS:
         raise HTTPException(404, {"code": "AIRPORT_NOT_FOUND", "message": f"No airport with IATA code '{iataCode}'."})
     AIRPORTS[iataCode] = {**body.model_dump(), "iataCode": iataCode}
@@ -568,6 +582,7 @@ def update_airport(iataCode: str, body: Airport):
 
 @app.delete("/airports/{iataCode}", status_code=204, tags=["airports"])
 def delete_airport(iataCode: str):
+    iataCode = iataCode.upper()
     if iataCode not in AIRPORTS:
         raise HTTPException(404, {"code": "AIRPORT_NOT_FOUND", "message": f"No airport with IATA code '{iataCode}'."})
     if any(r["origin"] == iataCode or r["destination"] == iataCode for r in ROUTES.values()):
@@ -579,6 +594,10 @@ def delete_airport(iataCode: str):
 
 @app.get("/routes", response_model=list[Route], tags=["routes"])
 def list_routes(origin: Optional[str] = None, destination: Optional[str] = None):
+    if origin:
+        origin = origin.upper()
+    if destination:
+        destination = destination.upper()
     results = list(ROUTES.values())
     if origin:
         results = [r for r in results if r["origin"] == origin]
@@ -588,15 +607,18 @@ def list_routes(origin: Optional[str] = None, destination: Optional[str] = None)
 
 @app.post("/routes", response_model=Route, status_code=201, tags=["routes"])
 def create_route(body: RouteInput):
-    if body.origin == body.destination:
+    origin = body.origin.upper()
+    destination = body.destination.upper()
+    if origin == destination:
         raise HTTPException(400, {"code": "SAME_ORIGIN_DESTINATION", "message": "Origin and destination must differ."})
-    if body.origin not in AIRPORTS:
-        raise HTTPException(400, {"code": "UNKNOWN_AIRPORT", "message": f"Unknown airport '{body.origin}'."})
-    if body.destination not in AIRPORTS:
-        raise HTTPException(400, {"code": "UNKNOWN_AIRPORT", "message": f"Unknown airport '{body.destination}'."})
-    if any(r["origin"] == body.origin and r["destination"] == body.destination for r in ROUTES.values()):
+    if origin not in AIRPORTS:
+        raise HTTPException(400, {"code": "UNKNOWN_AIRPORT", "message": f"Unknown airport '{origin}'."})
+    if destination not in AIRPORTS:
+        raise HTTPException(400, {"code": "UNKNOWN_AIRPORT", "message": f"Unknown airport '{destination}'."})
+    if any(r["origin"] == origin and r["destination"] == destination for r in ROUTES.values()):
         raise HTTPException(409, {"code": "ROUTE_EXISTS", "message": "Route already exists for that origin–destination pair."})
-    route = {"id": str(uuid.uuid4()), **body.model_dump()}
+    route = {"id": str(uuid.uuid4()), "origin": origin, "destination": destination,
+             "distanceNauticalMiles": body.distanceNauticalMiles, "blockTimeMinutes": body.blockTimeMinutes}
     ROUTES[route["id"]] = route
     return route
 
@@ -626,6 +648,10 @@ def list_flights(
     status: Optional[FlightStatus] = None,
     limit: int = Query(50, ge=1, le=200),
 ):
+    if origin:
+        origin = origin.upper()
+    if destination:
+        destination = destination.upper()
     results = list(FLIGHTS.values())
     if origin or destination:
         matching_routes = {
@@ -993,7 +1019,7 @@ def create_lost_baggage_case(body: LostBaggageCaseInput):
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     case = {
         "caseId": case_id, "pnr": body.pnr, "bagTag": body.bagTag,
-        "reportedAtAirport": body.reportedAtAirport, "description": body.description,
+        "reportedAtAirport": body.reportedAtAirport.upper(), "description": body.description,
         "status": "OPEN", "openedAt": now,
     }
     LOST_BAGGAGE_CASES[case_id] = case
