@@ -107,6 +107,24 @@ Lost baggage case IDs:
    c1000002-0000-0000-0000-000000000000  David Chen's duffel, OPEN
 
 
+DEPLOYING TO RENDER (free tier)
+--------------------------------
+1. Go to https://render.com and sign in (or sign up — it's free)
+2. Click "New" → "Web Service"
+3. Connect your GitHub account and select the insomnia-airlines-api repo
+4. Render will detect render.yaml automatically — just click Deploy
+5. Your API will be live at a URL like:
+      https://insomnia-airlines-api.onrender.com
+
+Notes:
+- The free tier spins down after 15 minutes of inactivity. The first
+  request after a gap takes ~30 seconds to wake up. That's normal.
+- Data resets to seed data every time the service restarts or wakes up
+  (same as local — it's all in memory).
+- The local start command uses --reload and port 8000. Render uses its
+  own $PORT variable and no --reload. render.yaml handles this for you.
+
+
 THE FILES
 ---------
 main.py          The entire API — all endpoints and all data live here
