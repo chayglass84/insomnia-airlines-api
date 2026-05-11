@@ -47,6 +47,7 @@
   <p class="subtitle">
     Running at <code>http://localhost:8000</code> &mdash;
     Interactive docs: <a href="/docs">/docs</a> &nbsp;|&nbsp; <a href="/redoc">/redoc</a>
+    &nbsp;|&nbsp; <span id="version-label" style="color:#aaa;"></span>
   </p>
 
   <div id="route-map"></div>
@@ -299,6 +300,17 @@
 
   <script>
     window.addEventListener('DOMContentLoaded', function () {
+      // Version label
+      fetch('/version').then(function(r) { return r.json(); }).then(function(v) {
+        if (v.version) {
+          var d = new Date(v.published);
+          var label = 'v' + v.version + ', published ' +
+            d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) + ', ' +
+            d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+          document.getElementById('version-label').textContent = label;
+        }
+      });
+
       // Fix Try in Insomnia button URLs to use current origin
       var origin = encodeURIComponent(window.location.origin);
       document.querySelectorAll('.try-btn').forEach(function (btn) {

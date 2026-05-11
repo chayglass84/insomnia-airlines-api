@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import random
 import string
 import uuid
@@ -1049,6 +1050,14 @@ def close_lost_baggage_case(caseId: str):
 
 
 # ── Admin ──────────────────────────────────────────────────────────────────────
+
+@app.get("/version", include_in_schema=False)
+def get_version():
+    try:
+        with open("version.json") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"version": 0, "published": None}
 
 @app.post("/admin/reset-demo-data", include_in_schema=False)
 def reset_demo_data():
