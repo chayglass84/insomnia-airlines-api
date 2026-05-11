@@ -281,5 +281,13 @@
     </table>
   </section>
 
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      var origin = encodeURIComponent(window.location.origin);
+      document.querySelectorAll('.try-btn').forEach(function (btn) {
+        btn.href = btn.href.replace(/curl%20http%3A%2F%2Flocalhost%3A8000/g, 'curl%20' + origin);
+      });
+    });
+  </script>
 </body>
 </html>
