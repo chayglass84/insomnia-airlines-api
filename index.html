@@ -4,11 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Insomnia Airlines API</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; color: #222; padding: 2rem; }
     h1 { font-size: 1.6rem; margin-bottom: .25rem; }
-    .subtitle { color: #666; margin-bottom: 2rem; font-size: .95rem; }
+    .subtitle { color: #666; margin-bottom: 1.25rem; font-size: .95rem; }
     .subtitle a { color: #0057b8; }
     section { margin-bottom: 2rem; }
     h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: .05em; color: #555; border-bottom: 2px solid #ddd; padding-bottom: .4rem; margin-bottom: .75rem; }
@@ -31,6 +33,13 @@
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     .try-btn { display: inline-block; background: #7B4FE9; color: #fff; font-size: .75rem; font-weight: 600; padding: .3rem .7rem; border-radius: 4px; text-decoration: none; white-space: nowrap; }
     .try-btn:hover { background: #6035cc; }
+    #route-map { height: 320px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 2rem; }
+    .leaflet-tooltip.ap-label { background: transparent; border: none; box-shadow: none; font-size: .7rem; font-weight: 700; color: #333; padding: 0; }
+    .reset-bar { text-align: center; padding: 2rem 0 1rem; border-top: 2px solid #ddd; margin-top: 1rem; }
+    .reset-btn { background: #7B4FE9; color: #fff; border: none; font-size: .95rem; font-weight: 600; padding: .6rem 1.5rem; border-radius: 6px; cursor: pointer; }
+    .reset-btn:hover:not(:disabled) { background: #6035cc; }
+    .reset-btn:disabled { opacity: .6; cursor: default; }
+    .reset-msg { font-size: .85rem; color: #666; margin-top: .5rem; min-height: 1.2em; }
   </style>
 </head>
 <body>
@@ -39,6 +48,8 @@
     Running at <code>http://localhost:8000</code> &mdash;
     Interactive docs: <a href="/docs">/docs</a> &nbsp;|&nbsp; <a href="/redoc">/redoc</a>
   </p>
+
+  <div id="route-map"></div>
 
   <!-- DEMO SCENARIOS -->
   <section>
@@ -281,12 +292,88 @@
     </table>
   </section>
 
+  <div class="reset-bar">
+    <button class="reset-btn" id="resetBtn">Update Demo Data</button>
+    <div class="reset-msg" id="resetMsg"></div>
+  </div>
+
   <script>
     window.addEventListener('DOMContentLoaded', function () {
+      // Fix Try in Insomnia button URLs to use current origin
       var origin = encodeURIComponent(window.location.origin);
       document.querySelectorAll('.try-btn').forEach(function (btn) {
         btn.href = btn.href.replace(/curl%20http%3A%2F%2Flocalhost%3A8000/g, 'curl%20' + origin);
       });
+
+      // Replace hardcoded template dates with today's date
+      var today = new Date().toISOString().slice(0, 10);
+      if (today !== '2026-05-08') {
+        document.querySelectorAll('a[href]').forEach(function (a) {
+          if (a.href.includes('2026-05-08')) {
+            a.href = a.href.replace(/2026-05-08/g, today);
+          }
+        });
+        document.querySelectorAll('code').forEach(function (c) {
+          if (c.textContent.includes('2026-05-08')) {
+            c.textContent = c.textContent.replace(/2026-05-08/g, today);
+          }
+        });
+      }
+
+      // Route map
+      var airports = {
+        YYZ: [43.6777, -79.6248], YUL: [45.4706, -73.7408], YVR: [49.1967, -123.1815],
+        SEA: [47.4490, -122.3094], SFO: [37.6213, -122.3790], ORD: [41.9742, -87.9073],
+        IAH: [29.9902, -95.3368], IAD: [38.9531, -77.4565], BOS: [42.3656, -71.0096],
+        FLL: [26.0726, -80.1527]
+      };
+      var routes = [
+        ['YYZ','SFO'], ['YYZ','ORD'], ['YYZ','IAD'], ['YYZ','BOS'],
+        ['YUL','FLL'], ['YVR','SEA'], ['YVR','ORD'],
+        ['SFO','IAH'], ['ORD','IAH'], ['BOS','IAD']
+      ];
+
+      var map = L.map('route-map', { zoomControl: true, scrollWheelZoom: false }).setView([40, -90], 3);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18
+      }).addTo(map);
+
+      routes.forEach(function (r) {
+        L.polyline([airports[r[0]], airports[r[1]]], {
+          color: '#7B4FE9', weight: 2, opacity: 0.65
+        }).addTo(map);
+      });
+
+      var dotIcon = L.divIcon({
+        className: '',
+        html: '<div style="width:9px;height:9px;background:#7B4FE9;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>',
+        iconSize: [9, 9],
+        iconAnchor: [4, 4]
+      });
+      Object.keys(airports).forEach(function (code) {
+        L.marker(airports[code], { icon: dotIcon })
+          .addTo(map)
+          .bindTooltip(code, { permanent: true, direction: 'top', offset: [0, -5], className: 'ap-label' });
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      var btn = this;
+      var msg = document.getElementById('resetMsg');
+      btn.disabled = true;
+      btn.textContent = 'Updating…';
+      fetch('/admin/reset-demo-data', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          msg.textContent = 'Demo data updated to ' + data.date + '. Reloading…';
+          setTimeout(function () { window.location.reload(); }, 800);
+        })
+        .catch(function () {
+          msg.textContent = 'Error — is the server running?';
+          btn.disabled = false;
+          btn.textContent = 'Update Demo Data';
+        });
     });
   </script>
 </body>

@@ -4,7 +4,7 @@ import copy
 import random
 import string
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from typing import Optional
 
@@ -280,9 +280,26 @@ class LostBaggageCasePatch(BaseModel):
     notes: Optional[str] = None
 
 
-# ── Seed data ──────────────────────────────────────────────────────────────────
+# ── Seed templates ─────────────────────────────────────────────────────────────
+# All date-bearing strings use _D0 / _D1 as placeholders; _reset_demo_data()
+# replaces them with today / tomorrow before populating the live dicts.
 
-AIRPORTS: dict = {a["iataCode"]: a for a in [
+_D0 = "2026-05-08"
+_D1 = "2026-05-09"
+
+
+def _shift(obj, d0: str, d1: str):
+    """Recursively replace template dates throughout a nested structure."""
+    if isinstance(obj, str):
+        return obj.replace(_D1, d1).replace(_D0, d0)
+    if isinstance(obj, dict):
+        return {k: _shift(v, d0, d1) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_shift(item, d0, d1) for item in obj]
+    return obj
+
+
+_SEED_AIRPORTS = {a["iataCode"]: a for a in [
     {"iataCode": "YYZ", "name": "Toronto Pearson International Airport",           "city": "Toronto",         "country": "CA", "timezone": "America/Toronto"},
     {"iataCode": "YUL", "name": "Montréal–Trudeau International Airport",          "city": "Montréal",        "country": "CA", "timezone": "America/Toronto"},
     {"iataCode": "YVR", "name": "Vancouver International Airport",                 "city": "Vancouver",       "country": "CA", "timezone": "America/Vancouver"},
@@ -295,7 +312,7 @@ AIRPORTS: dict = {a["iataCode"]: a for a in [
     {"iataCode": "FLL", "name": "Fort Lauderdale-Hollywood International Airport", "city": "Fort Lauderdale", "country": "US", "timezone": "America/New_York"},
 ]}
 
-ROUTES: dict = {r["id"]: r for r in [
+_SEED_ROUTES = {r["id"]: r for r in [
     {"id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301", "origin": "YYZ", "destination": "SFO", "distanceNauticalMiles": 1850, "blockTimeMinutes": 305},
     {"id": "4a3604f1-4f89-11d3-9a0c-0305e82c3302", "origin": "YYZ", "destination": "ORD", "distanceNauticalMiles":  360, "blockTimeMinutes":  90},
     {"id": "5b4714f2-4f89-11d3-9a0c-0305e82c3303", "origin": "YYZ", "destination": "IAD", "distanceNauticalMiles":  330, "blockTimeMinutes":  95},
@@ -308,8 +325,8 @@ ROUTES: dict = {r["id"]: r for r in [
     {"id": "c2be84f9-4f89-11d3-9a0c-0305e82c3310", "origin": "BOS", "destination": "IAD", "distanceNauticalMiles":  400, "blockTimeMinutes":  75},
 ]}
 
-# keyed by (flightNumber, departureDate)
-FLIGHTS: dict = {(f["flightNumber"], f["departureDate"]): f for f in [
+# Stored as a list so _shift can replace dates before we re-key by (flightNumber, departureDate).
+_SEED_FLIGHTS = [
     {"flightNumber": "IA101",  "departureDate": "2026-05-08", "routeId": "3f2504e0-4f89-11d3-9a0c-0305e82c3301", "aircraftTailNumber": "C-FINS", "scheduledDeparture": "2026-05-08T13:00:00Z", "scheduledArrival": "2026-05-08T18:05:00Z", "gate": "D32", "status": "DEPARTED"},
     {"flightNumber": "IA204",  "departureDate": "2026-05-08", "routeId": "4a3604f1-4f89-11d3-9a0c-0305e82c3302", "aircraftTailNumber": "C-FZZA", "scheduledDeparture": "2026-05-08T14:30:00Z", "scheduledArrival": "2026-05-08T16:00:00Z", "gate": "B14", "status": "BOARDING"},
     {"flightNumber": "IA315",  "departureDate": "2026-05-08", "routeId": "5b4714f2-4f89-11d3-9a0c-0305e82c3303", "aircraftTailNumber": "C-GZZZ", "scheduledDeparture": "2026-05-08T15:00:00Z", "scheduledArrival": "2026-05-08T16:35:00Z", "gate": "C22", "status": "SCHEDULED"},
@@ -320,15 +337,14 @@ FLIGHTS: dict = {(f["flightNumber"], f["departureDate"]): f for f in [
     {"flightNumber": "IA825",  "departureDate": "2026-05-08", "routeId": "a09c64f7-4f89-11d3-9a0c-0305e82c3308", "aircraftTailNumber": "C-FYZA", "scheduledDeparture": "2026-05-08T20:30:00Z", "scheduledArrival": "2026-05-09T00:00:00Z", "gate": "T44", "status": "DELAYED"},
     {"flightNumber": "IA933",  "departureDate": "2026-05-09", "routeId": "3f2504e0-4f89-11d3-9a0c-0305e82c3301", "aircraftTailNumber": "C-FINS", "scheduledDeparture": "2026-05-09T13:00:00Z", "scheduledArrival": "2026-05-09T18:05:00Z", "gate": "D32", "status": "SCHEDULED"},
     {"flightNumber": "IA1042", "departureDate": "2026-05-09", "routeId": "b1ad74f8-4f89-11d3-9a0c-0305e82c3309", "aircraftTailNumber": "C-FBCD", "scheduledDeparture": "2026-05-09T17:00:00Z", "scheduledArrival": "2026-05-09T19:10:00Z", "gate": "K07", "status": "SCHEDULED"},
-]}
+]
 
-FREQUENT_FLYERS: dict = {
+_SEED_FREQUENT_FLYERS = {
     "FF1029384": {"frequentFlyerId": "FF1029384", "firstName": "Alex",  "lastName": "Morgan", "email": "alex.morgan@example.com",  "tier": "GOLD",   "milesBalance": 48230, "memberSince": "2019-08-04"},
     "FF2938475": {"frequentFlyerId": "FF2938475", "firstName": "Sam",   "lastName": "Taylor", "email": "sam.taylor@example.com",   "tier": "SILVER", "milesBalance": 12500, "memberSince": "2022-03-15"},
 }
 
-# keyed by PNR; passengers and segments are stored inline
-BOOKINGS: dict = {
+_SEED_BOOKINGS = {
     "AB12CD": {
         "pnr": "AB12CD", "status": "CONFIRMED", "contactEmail": "alex.morgan@example.com",
         "passengers": [
@@ -382,15 +398,13 @@ BOOKINGS: dict = {
     },
 }
 
-# keyed by assignment UUID; includes pnr for filtering
-SEAT_ASSIGNMENTS: dict = {
+_SEED_SEAT_ASSIGNMENTS = {
     "s1000001-0000-0000-0000-000000000000": {"id": "s1000001-0000-0000-0000-000000000000", "pnr": "AB12CD", "passengerId": "a1000001-0000-0000-0000-000000000000", "segmentIndex": 0, "seatNumber": "14C"},
     "s1000002-0000-0000-0000-000000000000": {"id": "s1000002-0000-0000-0000-000000000000", "pnr": "AB12CD", "passengerId": "a1000002-0000-0000-0000-000000000000", "segmentIndex": 0, "seatNumber": "14D"},
     "s1000003-0000-0000-0000-000000000000": {"id": "s1000003-0000-0000-0000-000000000000", "pnr": "EF34GH", "passengerId": "a1000003-0000-0000-0000-000000000000", "segmentIndex": 0, "seatNumber": "3A"},
 }
 
-# keyed by bagTag
-BAGS: dict = {
+_SEED_BAGS = {
     "0074123456": {"bagTag": "0074123456", "pnr": "AB12CD", "passengerId": "a1000001-0000-0000-0000-000000000000", "weightKg": 18.4, "status": "LOADED",     "currentLocation": "YYZ", "assignedFlightNumber": "IA204", "assignedDepartureDate": "2026-05-08", "checkedInAt": "2026-05-08T11:42:18Z"},
     "0074123457": {"bagTag": "0074123457", "pnr": "AB12CD", "passengerId": "a1000002-0000-0000-0000-000000000000", "weightKg": 22.1, "status": "LOADED",     "currentLocation": "YYZ", "assignedFlightNumber": "IA204", "assignedDepartureDate": "2026-05-08", "checkedInAt": "2026-05-08T11:50:00Z"},
     "0074234567": {"bagTag": "0074234567", "pnr": "EF34GH", "passengerId": "a1000003-0000-0000-0000-000000000000", "weightKg": 15.0, "status": "LOADED",     "currentLocation": "YYZ", "assignedFlightNumber": "IA101", "assignedDepartureDate": "2026-05-08", "checkedInAt": "2026-05-08T10:15:00Z"},
@@ -399,8 +413,7 @@ BAGS: dict = {
     "0074567890": {"bagTag": "0074567890", "pnr": "QR90ST", "passengerId": "a1000006-0000-0000-0000-000000000000", "weightKg": 12.0, "status": "LOST",       "currentLocation": "ORD", "checkedInAt": "2026-05-06T14:30:00Z"},
 }
 
-# keyed by bagTag; each value is a list of events
-BAG_EVENTS: dict = {
+_SEED_BAG_EVENTS = {
     "0074123456": [
         {"id": "e1000001-0000-0000-0000-000000000000", "bagTag": "0074123456", "type": "CHECK_IN",       "location": "YYZ",                             "occurredAt": "2026-05-08T11:42:18Z"},
         {"id": "e1000002-0000-0000-0000-000000000000", "bagTag": "0074123456", "type": "SECURITY_CLEAR", "location": "YYZ",                             "occurredAt": "2026-05-08T12:10:00Z"},
@@ -431,8 +444,7 @@ BAG_EVENTS: dict = {
     ],
 }
 
-# keyed by caseId UUID
-LOST_BAGGAGE_CASES: dict = {
+_SEED_LOST_BAGGAGE_CASES = {
     "c1000001-0000-0000-0000-000000000000": {
         "caseId": "c1000001-0000-0000-0000-000000000000", "pnr": "QR90ST", "bagTag": "0074567890",
         "reportedAtAirport": "ORD", "description": "Black hardshell roller, red ribbon on handle.",
@@ -445,6 +457,56 @@ LOST_BAGGAGE_CASES: dict = {
         "status": "OPEN", "openedAt": "2026-05-08T15:30:00Z",
     },
 }
+
+
+# ── Live data ──────────────────────────────────────────────────────────────────
+
+AIRPORTS: dict = {}
+ROUTES: dict = {}
+FLIGHTS: dict = {}
+FREQUENT_FLYERS: dict = {}
+BOOKINGS: dict = {}
+SEAT_ASSIGNMENTS: dict = {}
+BAGS: dict = {}
+BAG_EVENTS: dict = {}
+LOST_BAGGAGE_CASES: dict = {}
+
+
+def _reset_demo_data() -> None:
+    today = date.today()
+    d0 = today.isoformat()
+    d1 = (today + timedelta(days=1)).isoformat()
+
+    AIRPORTS.clear()
+    AIRPORTS.update(copy.deepcopy(_SEED_AIRPORTS))
+
+    ROUTES.clear()
+    ROUTES.update(copy.deepcopy(_SEED_ROUTES))
+
+    FREQUENT_FLYERS.clear()
+    FREQUENT_FLYERS.update(copy.deepcopy(_SEED_FREQUENT_FLYERS))
+
+    shifted_flights = _shift(_SEED_FLIGHTS, d0, d1)
+    FLIGHTS.clear()
+    FLIGHTS.update({(f["flightNumber"], f["departureDate"]): f for f in shifted_flights})
+
+    BOOKINGS.clear()
+    BOOKINGS.update(_shift(copy.deepcopy(_SEED_BOOKINGS), d0, d1))
+
+    SEAT_ASSIGNMENTS.clear()
+    SEAT_ASSIGNMENTS.update(copy.deepcopy(_SEED_SEAT_ASSIGNMENTS))
+
+    BAGS.clear()
+    BAGS.update(_shift(copy.deepcopy(_SEED_BAGS), d0, d1))
+
+    BAG_EVENTS.clear()
+    BAG_EVENTS.update(_shift(copy.deepcopy(_SEED_BAG_EVENTS), d0, d1))
+
+    LOST_BAGGAGE_CASES.clear()
+    LOST_BAGGAGE_CASES.update(_shift(copy.deepcopy(_SEED_LOST_BAGGAGE_CASES), d0, d1))
+
+
+_reset_demo_data()
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -462,7 +524,6 @@ def _new_bag_tag() -> str:
         if tag not in BAGS:
             return tag
 
-# Maps a BagEventType to the resulting BagStatus (None = no change)
 _EVENT_STATUS: dict = {
     "CHECK_IN":       "CHECKED_IN",
     "SECURITY_CLEAR": None,
@@ -737,7 +798,6 @@ def remove_passenger(pnr: str, passengerId: str):
     if len(passengers) == 1:
         raise HTTPException(409, {"code": "LAST_PASSENGER", "message": "Cannot remove the last passenger — cancel the booking instead."})
     BOOKINGS[pnr]["passengers"] = [p for p in passengers if p["id"] != passengerId]
-    # remove any seat assignments for this passenger on this booking
     for sid in list(SEAT_ASSIGNMENTS):
         sa = SEAT_ASSIGNMENTS[sid]
         if sa["pnr"] == pnr and sa["passengerId"] == passengerId:
@@ -960,3 +1020,11 @@ def close_lost_baggage_case(caseId: str):
     if caseId not in LOST_BAGGAGE_CASES:
         raise HTTPException(404, {"code": "CASE_NOT_FOUND", "message": f"No lost-baggage case '{caseId}'."})
     LOST_BAGGAGE_CASES[caseId]["status"] = "CLOSED"
+
+
+# ── Admin ──────────────────────────────────────────────────────────────────────
+
+@app.post("/admin/reset-demo-data", include_in_schema=False)
+def reset_demo_data():
+    _reset_demo_data()
+    return {"ok": True, "date": date.today().isoformat()}
