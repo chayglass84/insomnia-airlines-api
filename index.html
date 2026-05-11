@@ -50,77 +50,77 @@
         <tr>
           <td><strong>All today's flights from YYZ</strong></td>
           <td><a href="/flights?origin=YYZ&departureDate=2026-05-08"><code>/flights?origin=YYZ&amp;departureDate=2026-05-08</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listFlights&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/flights.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fflights%3Forigin%3DYYZ%26departureDate%3D2026-05-08" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Flights currently boarding</strong></td>
           <td><a href="/flights?status=BOARDING"><code>/flights?status=BOARDING</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listFlights&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/flights.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fflights%3Fstatus%3DBOARDING" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Canadian airports only</strong></td>
           <td><a href="/airports?country=CA"><code>/airports?country=CA</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listAirports&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/flights.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fairports%3Fcountry%3DCA" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>All routes out of YYZ</strong></td>
           <td><a href="/routes?origin=YYZ"><code>/routes?origin=YYZ</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listRoutes&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/flights.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Froutes%3Forigin%3DYYZ" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Jordan Lee's business class booking</strong> (EF34GH)</td>
           <td><a href="/bookings/EF34GH"><code>/bookings/EF34GH</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=getBooking&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/bookings.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fbookings%2FEF34GH" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Alex Morgan's frequent flyer profile</strong> (GOLD, 48k miles)</td>
           <td><a href="/passengers/FF1029384"><code>/passengers/FF1029384</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=getFrequentFlyer&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/bookings.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fpassengers%2FFF1029384" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Alex Morgan's bookings via frequent flyer ID</strong></td>
           <td><a href="/passengers/FF1029384/bookings"><code>/passengers/FF1029384/bookings</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listFrequentFlyerBookings&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/bookings.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fpassengers%2FFF1029384%2Fbookings" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Seat assignments on Alex &amp; Sam's booking</strong> (AB12CD — 14C and 14D)</td>
           <td><a href="/bookings/AB12CD/seats"><code>/bookings/AB12CD/seats</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listSeatAssignments&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/bookings.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fbookings%2FAB12CD%2Fseats" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>All bags loaded on IA204 today</strong> (Alex &amp; Sam's bags)</td>
           <td><a href="/flights/IA204/bags?departureDate=2026-05-08"><code>/flights/IA204/bags?departureDate=2026-05-08</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listFlightBags&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fflights%2FIA204%2Fbags%3FdepartureDate%3D2026-05-08" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>All bags on booking AB12CD</strong></td>
           <td><a href="/bookings/AB12CD/bags"><code>/bookings/AB12CD/bags</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listBookingBags&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fbookings%2FAB12CD%2Fbags" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Full tracking history for Alex Morgan's bag</strong> (check-in → security → loaded)</td>
           <td><a href="/bags/0074123456/events"><code>/bags/0074123456/events</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listBagEvents&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fbags%2F0074123456%2Fevents" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>David Chen's bag — claimed at FLL</strong></td>
           <td><a href="/bags/0074345678"><code>/bags/0074345678</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=getBag&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fbags%2F0074345678" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Lisa Park's lost roller bag case</strong> (status: SEARCHING)</td>
           <td><a href="/lost-baggage-cases/c1000001-0000-0000-0000-000000000000"><code>/lost-baggage-cases/c1000001-...</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=getLostBaggageCase&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Flost-baggage-cases%2Fc1000001-0000-0000-0000-000000000000" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>All open/searching lost baggage cases</strong></td>
           <td><a href="/lost-baggage-cases?status=SEARCHING"><code>/lost-baggage-cases?status=SEARCHING</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=listLostBaggageCases&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Flost-baggage-cases%3Fstatus%3DSEARCHING" target="_blank">Try in Insomnia</a></td>
         </tr>
         <tr>
           <td><strong>Maria Santos's bag checked in for tomorrow's flight</strong></td>
           <td><a href="/bags/0074456789"><code>/bags/0074456789</code></a></td>
-          <td><a class="try-btn" href="https://app.insomnia.rest/run?operationId=getBag&specUrl=https://raw.githubusercontent.com/chayglass84/insomnia-airlines-api/main/baggage.yaml" target="_blank">Try in Insomnia</a></td>
+          <td><a class="try-btn" href="https://app.insomnia.rest/run?curl=curl%20http%3A%2F%2Flocalhost%3A8000%2Fbags%2F0074456789" target="_blank">Try in Insomnia</a></td>
         </tr>
       </tbody>
     </table>
