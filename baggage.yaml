@@ -812,3 +812,12 @@ components:
         message:
           type: string
           example: No bag with tag '0074123456' exists.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Token obtained from `GET /auth/token` (Security & Testing API).
+        Tokens are valid for 24 hours.
+security:
+  - bearerAuth: []

@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
@@ -280,6 +280,11 @@ class LostBaggageCasePatch(BaseModel):
     status: Optional[LostBaggageCaseStatus] = None
     notes: Optional[str] = None
 
+class AuthToken(BaseModel):
+    token: str
+    issuedAt: str
+    expiresIn: str
+
 
 # ── Seed templates ─────────────────────────────────────────────────────────────
 # All date-bearing strings use _D0 / _D1 as placeholders; _reset_demo_data()
@@ -473,6 +478,8 @@ _SEED_LOST_BAGGAGE_CASES = {
 
 # ── Live data ──────────────────────────────────────────────────────────────────
 
+AUTH_TOKENS: dict[str, datetime] = {}
+
 AIRPORTS: dict = {}
 ROUTES: dict = {}
 FLIGHTS: dict = {}
@@ -547,6 +554,17 @@ _EVENT_STATUS: dict = {
     "FLAG_LOST":      "LOST",
     "FLAG_DAMAGED":   "DAMAGED",
 }
+
+def _require_token(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(401, {"code": "MISSING_TOKEN", "message": "Authorization header with Bearer token required."})
+    token = authorization[7:]
+    issued_at = AUTH_TOKENS.get(token)
+    if issued_at is None:
+        raise HTTPException(401, {"code": "INVALID_TOKEN", "message": "Token not recognized."})
+    if datetime.now(timezone.utc) - issued_at > timedelta(hours=24):
+        raise HTTPException(401, {"code": "EXPIRED_TOKEN", "message": "Token has expired (older than 24 hours)."})
+
 
 
 # ── Airports ───────────────────────────────────────────────────────────────────
@@ -897,9 +915,19 @@ def release_seat(pnr: str, seatAssignmentId: str):
     del SEAT_ASSIGNMENTS[seatAssignmentId]
 
 
+# ── Auth ───────────────────────────────────────────────────────────────────────
+
+@app.get("/auth/token", response_model=AuthToken, tags=["auth"])
+def get_auth_token():
+    token = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    AUTH_TOKENS[token] = now
+    return {"token": token, "issuedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "expiresIn": "24h"}
+
+
 # ── Bags ───────────────────────────────────────────────────────────────────────
 
-@app.get("/bags", response_model=list[Bag], tags=["bags"])
+@app.get("/bags", response_model=list[Bag], tags=["bags"], dependencies=[Depends(_require_token)])
 def list_bags(
     pnr: Optional[str] = None,
     flightNumber: Optional[str] = None,
@@ -915,7 +943,7 @@ def list_bags(
         results = [b for b in results if b["status"] == status.value]
     return results[:limit]
 
-@app.post("/bags", response_model=Bag, status_code=201, tags=["bags"])
+@app.post("/bags", response_model=Bag, status_code=201, tags=["bags"], dependencies=[Depends(_require_token)])
 def check_in_bag(body: BagInput):
     if body.pnr not in BOOKINGS:
         raise HTTPException(400, {"code": "UNKNOWN_BOOKING", "message": f"No booking with PNR '{body.pnr}'."})
@@ -935,13 +963,13 @@ def check_in_bag(body: BagInput):
     BAG_EVENTS[tag] = [{"id": str(uuid.uuid4()), "bagTag": tag, "type": "CHECK_IN", "location": "UNKNOWN", "occurredAt": now}]
     return bag
 
-@app.get("/bags/{bagTag}", response_model=Bag, tags=["bags"])
+@app.get("/bags/{bagTag}", response_model=Bag, tags=["bags"], dependencies=[Depends(_require_token)])
 def get_bag(bagTag: str):
     if bagTag not in BAGS:
         raise HTTPException(404, {"code": "BAG_NOT_FOUND", "message": f"No bag with tag '{bagTag}'."})
     return BAGS[bagTag]
 
-@app.patch("/bags/{bagTag}", response_model=Bag, tags=["bags"])
+@app.patch("/bags/{bagTag}", response_model=Bag, tags=["bags"], dependencies=[Depends(_require_token)])
 def patch_bag(bagTag: str, body: BagPatch):
     if bagTag not in BAGS:
         raise HTTPException(404, {"code": "BAG_NOT_FOUND", "message": f"No bag with tag '{bagTag}'."})
@@ -951,7 +979,7 @@ def patch_bag(bagTag: str, body: BagPatch):
     BAGS[bagTag] = bag
     return bag
 
-@app.delete("/bags/{bagTag}", status_code=204, tags=["bags"])
+@app.delete("/bags/{bagTag}", status_code=204, tags=["bags"], dependencies=[Depends(_require_token)])
 def delete_bag(bagTag: str):
     if bagTag not in BAGS:
         raise HTTPException(404, {"code": "BAG_NOT_FOUND", "message": f"No bag with tag '{bagTag}'."})
@@ -964,13 +992,13 @@ def delete_bag(bagTag: str):
 
 # ── Tracking ───────────────────────────────────────────────────────────────────
 
-@app.get("/bags/{bagTag}/events", response_model=list[BagEvent], tags=["tracking"])
+@app.get("/bags/{bagTag}/events", response_model=list[BagEvent], tags=["tracking"], dependencies=[Depends(_require_token)])
 def list_bag_events(bagTag: str):
     if bagTag not in BAGS:
         raise HTTPException(404, {"code": "BAG_NOT_FOUND", "message": f"No bag with tag '{bagTag}'."})
     return BAG_EVENTS.get(bagTag, [])
 
-@app.post("/bags/{bagTag}/events", response_model=BagEvent, status_code=201, tags=["tracking"])
+@app.post("/bags/{bagTag}/events", response_model=BagEvent, status_code=201, tags=["tracking"], dependencies=[Depends(_require_token)])
 def record_bag_event(bagTag: str, body: BagEventInput):
     if bagTag not in BAGS:
         raise HTTPException(404, {"code": "BAG_NOT_FOUND", "message": f"No bag with tag '{bagTag}'."})
@@ -988,13 +1016,13 @@ def record_bag_event(bagTag: str, body: BagEventInput):
     BAGS[bagTag]["currentLocation"] = body.location
     return event
 
-@app.get("/bookings/{pnr}/bags", response_model=list[Bag], tags=["bags"])
+@app.get("/bookings/{pnr}/bags", response_model=list[Bag], tags=["bags"], dependencies=[Depends(_require_token)])
 def list_booking_bags(pnr: str):
     if pnr not in BOOKINGS:
         raise HTTPException(404, {"code": "BOOKING_NOT_FOUND", "message": f"No booking with PNR '{pnr}'."})
     return [b for b in BAGS.values() if b["pnr"] == pnr]
 
-@app.get("/flights/{flightNumber}/bags", response_model=list[Bag], tags=["bags"])
+@app.get("/flights/{flightNumber}/bags", response_model=list[Bag], tags=["bags"], dependencies=[Depends(_require_token)])
 def list_flight_bags(flightNumber: str, departureDate: str = Query(..., description="ISO 8601 date, e.g. 2026-05-08")):
     if (flightNumber, departureDate) not in FLIGHTS:
         raise HTTPException(404, {"code": "FLIGHT_NOT_FOUND", "message": f"No flight '{flightNumber}' on {departureDate}."})
@@ -1003,7 +1031,7 @@ def list_flight_bags(flightNumber: str, departureDate: str = Query(..., descript
 
 # ── Lost baggage ───────────────────────────────────────────────────────────────
 
-@app.get("/lost-baggage-cases", response_model=list[LostBaggageCase], tags=["lost-baggage"])
+@app.get("/lost-baggage-cases", response_model=list[LostBaggageCase], tags=["lost-baggage"], dependencies=[Depends(_require_token)])
 def list_lost_baggage_cases(status: Optional[LostBaggageCaseStatus] = None, pnr: Optional[str] = None):
     results = list(LOST_BAGGAGE_CASES.values())
     if status:
@@ -1012,7 +1040,7 @@ def list_lost_baggage_cases(status: Optional[LostBaggageCaseStatus] = None, pnr:
         results = [c for c in results if c["pnr"] == pnr]
     return results
 
-@app.post("/lost-baggage-cases", response_model=LostBaggageCase, status_code=201, tags=["lost-baggage"])
+@app.post("/lost-baggage-cases", response_model=LostBaggageCase, status_code=201, tags=["lost-baggage"], dependencies=[Depends(_require_token)])
 def create_lost_baggage_case(body: LostBaggageCaseInput):
     if body.pnr not in BOOKINGS:
         raise HTTPException(400, {"code": "UNKNOWN_BOOKING", "message": f"No booking with PNR '{body.pnr}'."})
@@ -1026,13 +1054,13 @@ def create_lost_baggage_case(body: LostBaggageCaseInput):
     LOST_BAGGAGE_CASES[case_id] = case
     return case
 
-@app.get("/lost-baggage-cases/{caseId}", response_model=LostBaggageCase, tags=["lost-baggage"])
+@app.get("/lost-baggage-cases/{caseId}", response_model=LostBaggageCase, tags=["lost-baggage"], dependencies=[Depends(_require_token)])
 def get_lost_baggage_case(caseId: str):
     if caseId not in LOST_BAGGAGE_CASES:
         raise HTTPException(404, {"code": "CASE_NOT_FOUND", "message": f"No lost-baggage case '{caseId}'."})
     return LOST_BAGGAGE_CASES[caseId]
 
-@app.patch("/lost-baggage-cases/{caseId}", response_model=LostBaggageCase, tags=["lost-baggage"])
+@app.patch("/lost-baggage-cases/{caseId}", response_model=LostBaggageCase, tags=["lost-baggage"], dependencies=[Depends(_require_token)])
 def patch_lost_baggage_case(caseId: str, body: LostBaggageCasePatch):
     if caseId not in LOST_BAGGAGE_CASES:
         raise HTTPException(404, {"code": "CASE_NOT_FOUND", "message": f"No lost-baggage case '{caseId}'."})
@@ -1042,11 +1070,18 @@ def patch_lost_baggage_case(caseId: str, body: LostBaggageCasePatch):
     LOST_BAGGAGE_CASES[caseId] = case
     return case
 
-@app.delete("/lost-baggage-cases/{caseId}", status_code=204, tags=["lost-baggage"])
+@app.delete("/lost-baggage-cases/{caseId}", status_code=204, tags=["lost-baggage"], dependencies=[Depends(_require_token)])
 def close_lost_baggage_case(caseId: str):
     if caseId not in LOST_BAGGAGE_CASES:
         raise HTTPException(404, {"code": "CASE_NOT_FOUND", "message": f"No lost-baggage case '{caseId}'."})
     LOST_BAGGAGE_CASES[caseId]["status"] = "CLOSED"
+
+
+# ── Test ───────────────────────────────────────────────────────────────────────
+
+@app.get("/test/extra-data", tags=["test"])
+def get_extra_data(size: int = Query(100, ge=1, le=10000)):
+    return {f"name{i}": f"value{i}" for i in range(1, size + 1)}
 
 
 # ── Admin ──────────────────────────────────────────────────────────────────────
