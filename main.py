@@ -340,6 +340,8 @@ _SEED_ROUTES = {r["id"]: r for r in [
     {"id": "4a360501-4f89-11d3-9a0c-0305e82c3318", "origin": "IAH", "destination": "SFO", "distanceNauticalMiles": 1640, "blockTimeMinutes": 210},
     {"id": "5b471502-4f89-11d3-9a0c-0305e82c3319", "origin": "IAH", "destination": "ORD", "distanceNauticalMiles":  925, "blockTimeMinutes": 130},
     {"id": "6c582503-4f89-11d3-9a0c-0305e82c3320", "origin": "IAD", "destination": "BOS", "distanceNauticalMiles":  400, "blockTimeMinutes":  75},
+    {"id": "7d6e34fa-4f89-11d3-9a0c-0305e82c3321", "origin": "YYZ", "destination": "YUL", "distanceNauticalMiles":  330, "blockTimeMinutes":  85},
+    {"id": "8e7f44fb-4f89-11d3-9a0c-0305e82c3322", "origin": "YUL", "destination": "YYZ", "distanceNauticalMiles":  330, "blockTimeMinutes":  85},
 ]}
 
 # Stored as a list so _shift can replace dates before we re-key by (flightNumber, departureDate).
@@ -354,6 +356,8 @@ _SEED_FLIGHTS = [
     {"flightNumber": "IA825",  "departureDate": "2026-05-08", "routeId": "a09c64f7-4f89-11d3-9a0c-0305e82c3308", "aircraftTailNumber": "C-FYZA", "scheduledDeparture": "2026-05-08T20:30:00Z", "scheduledArrival": "2026-05-09T00:00:00Z", "gate": "T44", "status": "DELAYED"},
     {"flightNumber": "IA933",  "departureDate": "2026-05-09", "routeId": "3f2504e0-4f89-11d3-9a0c-0305e82c3301", "aircraftTailNumber": "C-FINS", "scheduledDeparture": "2026-05-09T13:00:00Z", "scheduledArrival": "2026-05-09T18:05:00Z", "gate": "D32", "status": "SCHEDULED"},
     {"flightNumber": "IA1042", "departureDate": "2026-05-09", "routeId": "b1ad74f8-4f89-11d3-9a0c-0305e82c3309", "aircraftTailNumber": "C-FBCD", "scheduledDeparture": "2026-05-09T17:00:00Z", "scheduledArrival": "2026-05-09T19:10:00Z", "gate": "K07", "status": "SCHEDULED"},
+    {"flightNumber": "IA119",  "departureDate": "2026-05-08", "routeId": "7d6e34fa-4f89-11d3-9a0c-0305e82c3321", "aircraftTailNumber": "C-FQRS", "scheduledDeparture": "2026-05-08T12:00:00Z", "scheduledArrival": "2026-05-08T13:25:00Z", "gate": "E07", "status": "SCHEDULED"},
+    {"flightNumber": "IA220",  "departureDate": "2026-05-08", "routeId": "8e7f44fb-4f89-11d3-9a0c-0305e82c3322", "aircraftTailNumber": "C-FQRT", "scheduledDeparture": "2026-05-08T16:30:00Z", "scheduledArrival": "2026-05-08T17:55:00Z", "gate": "B02", "status": "SCHEDULED"},
 ]
 
 _SEED_FREQUENT_FLYERS = {
