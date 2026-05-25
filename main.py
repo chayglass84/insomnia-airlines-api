@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import copy
 import json
 import random
@@ -1083,9 +1084,54 @@ def close_lost_baggage_case(caseId: str):
 
 # ── Test ───────────────────────────────────────────────────────────────────────
 
+def _digit_sum(n: int) -> int:
+    """Sum of len(str(i)) for i in 1..n."""
+    total, lo, length = 0, 1, 1
+    while True:
+        hi = lo * 10 - 1
+        if n <= hi:
+            return total + length * (n - lo + 1)
+        total += length * (hi - lo + 1)
+        lo, length = lo * 10, length + 1
+
+def _json_size(n: int) -> int:
+    """Byte size of the JSON response for n items.
+    Each item: '"nameI": "valueI"' = 15 + 2*digits bytes; separators 2*(n-1); braces 2."""
+    return 17 * n + 2 * _digit_sum(n)
+
+def _items_for_kb(target_kb: float) -> int:
+    target = int(target_kb * 1024)
+    lo, hi = 1, 10000
+    if _json_size(hi) <= target:
+        return hi
+    if _json_size(lo) >= target:
+        return lo
+    while lo < hi - 1:
+        mid = (lo + hi) // 2
+        if _json_size(mid) <= target:
+            lo = mid
+        else:
+            hi = mid
+    return lo
+
+@app.get("/test/delay", tags=["test"])
+async def get_delay(
+    ms: int = Query(500, ge=0, le=30000),
+    _token: None = Depends(_require_token),
+):
+    await asyncio.sleep(ms / 1000)
+    return {"delayed_ms": ms}
+
+
 @app.get("/test/extra-data", tags=["test"])
-def get_extra_data(size: int = Query(100, ge=1, le=10000)):
-    return {f"name{i}": f"value{i}" for i in range(1, size + 1)}
+def get_extra_data(
+    itemCount: Optional[int] = Query(None, ge=1, le=10000),
+    sizeInKB: Optional[float] = Query(None, gt=0, le=500),
+):
+    if itemCount is not None and sizeInKB is not None:
+        raise HTTPException(400, {"code": "AMBIGUOUS_SIZE", "message": "Provide either itemCount or sizeInKB, not both."})
+    n = _items_for_kb(sizeInKB) if sizeInKB is not None else (itemCount or 100)
+    return {f"name{i}": f"value{i}" for i in range(1, n + 1)}
 
 
 # ── Admin ──────────────────────────────────────────────────────────────────────
