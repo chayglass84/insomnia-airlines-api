@@ -21,10 +21,14 @@ STARTING THE SERVER
       cd ~/projects/insomnia-airlines-api
 
 3. Start the server:
-      python3 -m uvicorn main:app --reload
+      /usr/bin/python3 -m uvicorn main:app --reload
 
    The "--reload" flag means the server restarts automatically whenever
    you edit main.py. Great for development, leave it out in production.
+
+   NOTE: On Kong-managed Macs, the `python3` shell command is wrapped by
+   a corporate certificate tool and will fail with a permissions error.
+   Use the full path /usr/bin/python3 instead.
 
 4. You'll see something like:
       INFO:     Uvicorn running on http://127.0.0.1:8000
@@ -40,7 +44,7 @@ STARTING THE SERVER
 INSTALLING DEPENDENCIES (first time only)
 ------------------------------------------
 If you get "ModuleNotFoundError" when starting, run this first:
-      pip3 install -r requirements.txt
+      /usr/bin/pip3 install -r requirements.txt
 
 Then try starting the server again.
 
@@ -49,19 +53,20 @@ COMMON ERRORS
 -------------
 "zsh: command not found: uvicorn"
    Don't use `uvicorn` by itself. Always use:
-      python3 -m uvicorn main:app --reload
+      /usr/bin/python3 -m uvicorn main:app --reload
 
 "ModuleNotFoundError: No module named 'fastapi'"
-   Run:  pip3 install -r requirements.txt
+   Run:  /usr/bin/pip3 install -r requirements.txt
 
 "Address already in use"
    Something is already running on port 8000.
    Either stop that thing, or use a different port:
-      python3 -m uvicorn main:app --reload --port 8001
+      /usr/bin/python3 -m uvicorn main:app --reload --port 8001
    Then visit http://localhost:8001 instead.
 
-"command not found: python3"
-   Python isn't installed. Download it from https://www.python.org/downloads/
+"command not found: python3" or permissions error mentioning ca-key.pem
+   Your python3 shell command is wrapped by a corporate certificate tool.
+   Use /usr/bin/python3 explicitly — it bypasses the wrapper.
 
 
 THE DATA
@@ -133,4 +138,5 @@ requirements.txt The list of libraries this project needs
 flights.yaml     OpenAPI spec for airports, routes, and flights
 bookings.yaml    OpenAPI spec for bookings, passengers, and seats
 baggage.yaml     OpenAPI spec for bags, tracking events, and lost baggage
+security.yaml    OpenAPI spec for auth token and test data endpoints
 instructions.txt This file
