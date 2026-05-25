@@ -12,8 +12,8 @@ info:
 
     `GET /test/extra-data` generates large synthetic payloads for load and
     performance testing. `GET /test/delay` introduces a controlled response
-    delay for latency and timeout testing. Both endpoints require a bearer
-    token and do not interact with any airline data.
+    delay for latency and timeout testing. These endpoints require no
+    authentication and do not interact with any airline data.
   version: 1.0.0
   contact:
     name: Insomnia Airlines API Team
@@ -64,8 +64,6 @@ paths:
         Defaults to 500 ms. Use this endpoint to test client timeout handling,
         gateway timeout policies, and latency-dependent logic.
       operationId: getDelay
-      security:
-        - bearerAuth: []
       parameters:
         - name: ms
           in: query
@@ -86,8 +84,6 @@ paths:
                 $ref: '#/components/schemas/DelayResponse'
               example:
                 delayed_ms: 2000
-        '401':
-          description: Missing or invalid bearer token.
   /test/extra-data:
     get:
       tags:

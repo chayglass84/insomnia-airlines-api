@@ -1117,7 +1117,6 @@ def _items_for_kb(target_kb: float) -> int:
 @app.get("/test/delay", tags=["test"])
 async def get_delay(
     ms: int = Query(500, ge=0, le=30000),
-    _token: None = Depends(_require_token),
 ):
     await asyncio.sleep(ms / 1000)
     return {"delayed_ms": ms}
