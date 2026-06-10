@@ -1101,7 +1101,7 @@ def _json_size(n: int) -> int:
 
 def _items_for_kb(target_kb: float) -> int:
     target = int(target_kb * 1024)
-    lo, hi = 1, 10000
+    lo, hi = 1, 2_000_000
     if _json_size(hi) <= target:
         return hi
     if _json_size(lo) >= target:
@@ -1124,8 +1124,8 @@ async def get_delay(
 
 @app.get("/test/extra-data", tags=["test"])
 def get_extra_data(
-    itemCount: Optional[int] = Query(None, ge=1, le=10000),
-    sizeInKB: Optional[float] = Query(None, gt=0, le=500),
+    itemCount: Optional[int] = Query(None, ge=1, le=2_000_000),
+    sizeInKB: Optional[float] = Query(None, gt=0, le=50_000),
 ):
     if itemCount is not None and sizeInKB is not None:
         raise HTTPException(400, {"code": "AMBIGUOUS_SIZE", "message": "Provide either itemCount or sizeInKB, not both."})
