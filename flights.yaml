@@ -337,22 +337,23 @@ paths:
       parameters:
         - name: origin
           in: query
-          description: Origin airport IATA code.
+          description: >-
+            Origin airport IATA code. Accepts a comma-separated list (e.g.
+            `ORD,YVR`) to match flights from any of the given origins.
           required: false
           schema:
             type: string
-            minLength: 3
-            maxLength: 3
-            pattern: ^[A-Z]{3}$
+            pattern: ^[A-Z]{3}(,[A-Z]{3})*$
         - name: destination
           in: query
-          description: Destination airport IATA code.
+          description: >-
+            Destination airport IATA code. Accepts a comma-separated list
+            (e.g. `ORD,YVR`) to match flights to any of the given
+            destinations.
           required: false
           schema:
             type: string
-            minLength: 3
-            maxLength: 3
-            pattern: ^[A-Z]{3}$
+            pattern: ^[A-Z]{3}(,[A-Z]{3})*$
         - name: departureDate
           in: query
           description: Local departure date at the origin (ISO 8601 `YYYY-MM-DD`).

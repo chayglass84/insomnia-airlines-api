@@ -672,16 +672,14 @@ def list_flights(
     status: Optional[FlightStatus] = None,
     limit: int = Query(50, ge=1, le=200),
 ):
-    if origin:
-        origin = origin.upper()
-    if destination:
-        destination = destination.upper()
+    origins = {o.strip().upper() for o in origin.split(",") if o.strip()} if origin else None
+    destinations = {d.strip().upper() for d in destination.split(",") if d.strip()} if destination else None
     results = list(FLIGHTS.values())
-    if origin or destination:
+    if origins or destinations:
         matching_routes = {
             r["id"] for r in ROUTES.values()
-            if (not origin or r["origin"] == origin)
-            and (not destination or r["destination"] == destination)
+            if (not origins or r["origin"] in origins)
+            and (not destinations or r["destination"] in destinations)
         }
         results = [f for f in results if f["routeId"] in matching_routes]
     if departureDate:
