@@ -354,22 +354,63 @@
         maxZoom: 18
       }).addTo(map);
 
-      routes.forEach(function (r) {
-        L.polyline([airports[r[0]], airports[r[1]]], {
-          color: '#7B4FE9', weight: 2, opacity: 0.65
-        }).addTo(map);
+      var DIM = '#c9c9c9';
+      var LINE_DEFAULT = { color: '#7B4FE9', weight: 2, opacity: 0.55 };
+      var LINE_DIMMED  = { color: DIM,       weight: 1, opacity: 0.35 };
+      var LINE_ACTIVE  = { color: '#7B4FE9', weight: 3, opacity: 0.95 };
+      var BUBBLE_DEFAULT = { radius: 6,  color: '#fff', weight: 2, fillColor: '#7B4FE9', fillOpacity: 0.9 };
+      var BUBBLE_DIMMED  = { radius: 5,  color: '#fff', weight: 2, fillColor: DIM,       fillOpacity: 0.9 };
+      var BUBBLE_ACTIVE  = { radius: 9,  color: '#fff', weight: 2, fillColor: '#ff7a1a', fillOpacity: 1 };
+      var BUBBLE_NEIGHBOR = { radius: 7, color: '#fff', weight: 2, fillColor: '#7B4FE9', fillOpacity: 1 };
+
+      // Build an undirected adjacency map so hovering an airport shows every
+      // route touching it, plus the line layers for quick styling.
+      var neighbors = {};
+      Object.keys(airports).forEach(function (code) { neighbors[code] = []; });
+      var lines = routes.map(function (r) {
+        var line = L.polyline([airports[r[0]], airports[r[1]]], LINE_DEFAULT).addTo(map);
+        neighbors[r[0]].push(r[1]);
+        neighbors[r[1]].push(r[0]);
+        return { line: line, a: r[0], b: r[1] };
       });
 
-      var dotIcon = L.divIcon({
-        className: '',
-        html: '<div style="width:9px;height:9px;background:#7B4FE9;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>',
-        iconSize: [9, 9],
-        iconAnchor: [4, 4]
-      });
+      var bubbles = {};
       Object.keys(airports).forEach(function (code) {
-        L.marker(airports[code], { icon: dotIcon })
-          .addTo(map)
-          .bindTooltip(code, { permanent: true, direction: 'top', offset: [0, -5], className: 'ap-label' });
+        var bubble = L.circleMarker(airports[code], BUBBLE_DEFAULT).addTo(map);
+        bubble.bindTooltip(code, { permanent: true, direction: 'top', offset: [0, -8], className: 'ap-label' });
+        bubbles[code] = bubble;
+      });
+
+      function resetMap() {
+        lines.forEach(function (l) { l.line.setStyle(LINE_DEFAULT); });
+        Object.keys(bubbles).forEach(function (code) { bubbles[code].setStyle(BUBBLE_DEFAULT); });
+      }
+
+      Object.keys(bubbles).forEach(function (code) {
+        bubbles[code].on('mouseover', function () {
+          var touched = {};
+          touched[code] = true;
+          neighbors[code].forEach(function (n) { touched[n] = true; });
+
+          lines.forEach(function (l) {
+            if (l.a === code || l.b === code) {
+              l.line.setStyle(LINE_ACTIVE);
+              l.line.bringToFront();
+            } else {
+              l.line.setStyle(LINE_DIMMED);
+            }
+          });
+          Object.keys(bubbles).forEach(function (c) {
+            if (c === code) {
+              bubbles[c].setStyle(BUBBLE_ACTIVE).bringToFront();
+            } else if (touched[c]) {
+              bubbles[c].setStyle(BUBBLE_NEIGHBOR).bringToFront();
+            } else {
+              bubbles[c].setStyle(BUBBLE_DIMMED);
+            }
+          });
+        });
+        bubbles[code].on('mouseout', resetMap);
       });
     });
 
