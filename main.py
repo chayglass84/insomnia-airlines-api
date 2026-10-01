@@ -288,21 +288,23 @@ class AuthToken(BaseModel):
 
 
 # ── Seed templates ─────────────────────────────────────────────────────────────
-# All date-bearing strings use _D0 / _D1 as placeholders; _reset_demo_data()
-# replaces them with today / tomorrow before populating the live dicts.
+# All date-bearing strings use _D0 / _D1 / _D2 as placeholders; _reset_demo_data()
+# replaces them with today / tomorrow / the day after before populating the
+# live dicts, giving the demo a rolling 3-day flight window.
 
 _D0 = "2026-05-08"
 _D1 = "2026-05-09"
+_D2 = "2026-05-10"
 
 
-def _shift(obj, d0: str, d1: str):
+def _shift(obj, d0: str, d1: str, d2: str):
     """Recursively replace template dates throughout a nested structure."""
     if isinstance(obj, str):
-        return obj.replace(_D1, d1).replace(_D0, d0)
+        return obj.replace(_D2, d2).replace(_D1, d1).replace(_D0, d0)
     if isinstance(obj, dict):
-        return {k: _shift(v, d0, d1) for k, v in obj.items()}
+        return {k: _shift(v, d0, d1, d2) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [_shift(item, d0, d1) for item in obj]
+        return [_shift(item, d0, d1, d2) for item in obj]
     return obj
 
 
@@ -317,6 +319,11 @@ _SEED_AIRPORTS = {a["iataCode"]: a for a in [
     {"iataCode": "IAD", "name": "Dulles International Airport",                    "city": "Washington",      "country": "US", "timezone": "America/New_York"},
     {"iataCode": "BOS", "name": "Logan International Airport",                     "city": "Boston",          "country": "US", "timezone": "America/New_York"},
     {"iataCode": "FLL", "name": "Fort Lauderdale-Hollywood International Airport", "city": "Fort Lauderdale", "country": "US", "timezone": "America/New_York"},
+    {"iataCode": "LAX", "name": "Los Angeles International Airport",               "city": "Los Angeles",     "country": "US", "timezone": "America/Los_Angeles"},
+    {"iataCode": "JFK", "name": "John F. Kennedy International Airport",           "city": "New York",        "country": "US", "timezone": "America/New_York"},
+    {"iataCode": "DEN", "name": "Denver International Airport",                    "city": "Denver",          "country": "US", "timezone": "America/Denver"},
+    {"iataCode": "MIA", "name": "Miami International Airport",                     "city": "Miami",           "country": "US", "timezone": "America/New_York"},
+    {"iataCode": "LHR", "name": "London Heathrow Airport",                         "city": "London",          "country": "GB", "timezone": "Europe/London"},
 ]}
 
 _SEED_ROUTES = {r["id"]: r for r in [
@@ -343,7 +350,41 @@ _SEED_ROUTES = {r["id"]: r for r in [
     {"id": "6c582503-4f89-11d3-9a0c-0305e82c3320", "origin": "IAD", "destination": "BOS", "distanceNauticalMiles":  400, "blockTimeMinutes":  75},
     {"id": "7d6e34fa-4f89-11d3-9a0c-0305e82c3321", "origin": "YYZ", "destination": "YUL", "distanceNauticalMiles":  330, "blockTimeMinutes":  85},
     {"id": "8e7f44fb-4f89-11d3-9a0c-0305e82c3322", "origin": "YUL", "destination": "YYZ", "distanceNauticalMiles":  330, "blockTimeMinutes":  85},
+    # New destinations (hub-and-spoke expansion)
+    {"id": "bdbfa99b-c663-49d4-8b9a-d87db860705e", "origin": "YYZ", "destination": "LAX", "distanceNauticalMiles": 1980, "blockTimeMinutes": 320},
+    {"id": "e65ebf82-10b4-4300-a3e1-4918ea1d6112", "origin": "YYZ", "destination": "JFK", "distanceNauticalMiles":  280, "blockTimeMinutes":  75},
+    {"id": "1528cb55-9ead-4ddc-b0cc-0fa4d056e2d7", "origin": "YYZ", "destination": "MIA", "distanceNauticalMiles": 1150, "blockTimeMinutes": 180},
+    {"id": "7b8805cc-df56-4b62-ba5d-36a4c4ffd5d1", "origin": "YYZ", "destination": "DEN", "distanceNauticalMiles": 1300, "blockTimeMinutes": 195},
+    {"id": "729a7e74-bca1-4b3b-8b06-47f383a5cc53", "origin": "YYZ", "destination": "LHR", "distanceNauticalMiles": 3340, "blockTimeMinutes": 415},
+    {"id": "a37b1c4c-4ef2-4392-bbaf-a3d2ab8f94c8", "origin": "YUL", "destination": "JFK", "distanceNauticalMiles":  300, "blockTimeMinutes":  80},
+    {"id": "4ce2cb29-8a93-4c12-a01a-62f5d92efbbd", "origin": "YUL", "destination": "MIA", "distanceNauticalMiles": 1480, "blockTimeMinutes": 220},
+    {"id": "e7314122-49a9-45d9-b2f7-a818858006d9", "origin": "YVR", "destination": "LAX", "distanceNauticalMiles":  830, "blockTimeMinutes": 135},
+    {"id": "dbcf4876-a24f-454b-a2c3-94196f8f6843", "origin": "YVR", "destination": "DEN", "distanceNauticalMiles":  860, "blockTimeMinutes": 140},
+    # Reverse routes for new destinations
+    {"id": "d1b13f2c-d79c-4489-83b1-53a1bcf41bfd", "origin": "LAX", "destination": "YYZ", "distanceNauticalMiles": 1980, "blockTimeMinutes": 320},
+    {"id": "49fbc71c-c29e-4ac3-8d25-8dc024ae0a3d", "origin": "JFK", "destination": "YYZ", "distanceNauticalMiles":  280, "blockTimeMinutes":  75},
+    {"id": "ebd45b4e-74b3-4c25-a08d-75809934982f", "origin": "MIA", "destination": "YYZ", "distanceNauticalMiles": 1150, "blockTimeMinutes": 180},
+    {"id": "8d36d6ed-62d2-41b0-9e9e-e7d48db66951", "origin": "DEN", "destination": "YYZ", "distanceNauticalMiles": 1300, "blockTimeMinutes": 195},
+    {"id": "14fb700b-b37e-4873-bf2f-90711af6a433", "origin": "LHR", "destination": "YYZ", "distanceNauticalMiles": 3340, "blockTimeMinutes": 415},
+    {"id": "8e1eb880-129a-41e2-bb55-d67260eb20b3", "origin": "JFK", "destination": "YUL", "distanceNauticalMiles":  300, "blockTimeMinutes":  80},
+    {"id": "51719616-ab86-4ee1-bf5e-ded4e2d7f4b0", "origin": "MIA", "destination": "YUL", "distanceNauticalMiles": 1480, "blockTimeMinutes": 220},
+    {"id": "1229624b-5b6d-45d0-8458-5354082d147e", "origin": "LAX", "destination": "YVR", "distanceNauticalMiles":  830, "blockTimeMinutes": 135},
+    {"id": "c9b7305f-0a30-4a31-b51c-7c81cf5793a6", "origin": "DEN", "destination": "YVR", "distanceNauticalMiles":  860, "blockTimeMinutes": 140},
+    # Hub-to-hub connector closing the YYZ/YUL/YVR triangle, so every spoke
+    # can reach every other spoke via at most two hub connections.
+    {"id": "a64e0499-0543-4e35-8adb-d9e6dfecfa33", "origin": "YYZ", "destination": "YVR", "distanceNauticalMiles": 2080, "blockTimeMinutes": 330},
+    {"id": "5c12f6d4-031c-49c2-ab28-b7ae63921612", "origin": "YVR", "destination": "YYZ", "distanceNauticalMiles": 2080, "blockTimeMinutes": 330},
 ]}
+
+# Every route gets at least one flight on each of the 3 days in the demo
+# window, even ones with no hand-authored flight below, so a connection
+# always exists between any two airports (hub-and-spoke, worst case two
+# layovers). Flight numbers/gates/departure hours are derived deterministically
+# from route order so they stay stable across restarts.
+_AUTO_ROUTE_IDS = sorted(_SEED_ROUTES.keys())
+_AUTO_FLIGHT_NUMBERS = {rid: f"IA{5000 + i}" for i, rid in enumerate(_AUTO_ROUTE_IDS)}
+_AUTO_DEPARTURE_HOURS = {rid: 6 + (i * 37) % 15 for i, rid in enumerate(_AUTO_ROUTE_IDS)}
+_AUTO_GATES = {rid: f"G{(i % 40) + 1:02d}" for i, rid in enumerate(_AUTO_ROUTE_IDS)}
 
 # Stored as a list so _shift can replace dates before we re-key by (flightNumber, departureDate).
 _SEED_FLIGHTS = [
@@ -359,6 +400,15 @@ _SEED_FLIGHTS = [
     {"flightNumber": "IA1042", "departureDate": "2026-05-09", "routeId": "b1ad74f8-4f89-11d3-9a0c-0305e82c3309", "aircraftTailNumber": "C-FBCD", "scheduledDeparture": "2026-05-09T17:00:00Z", "scheduledArrival": "2026-05-09T19:10:00Z", "gate": "K07", "status": "SCHEDULED"},
     {"flightNumber": "IA119",  "departureDate": "2026-05-08", "routeId": "7d6e34fa-4f89-11d3-9a0c-0305e82c3321", "aircraftTailNumber": "C-FQRS", "scheduledDeparture": "2026-05-08T12:00:00Z", "scheduledArrival": "2026-05-08T13:25:00Z", "gate": "E07", "status": "SCHEDULED"},
     {"flightNumber": "IA220",  "departureDate": "2026-05-08", "routeId": "8e7f44fb-4f89-11d3-9a0c-0305e82c3322", "aircraftTailNumber": "C-FQRT", "scheduledDeparture": "2026-05-08T16:30:00Z", "scheduledArrival": "2026-05-08T17:55:00Z", "gate": "B02", "status": "SCHEDULED"},
+    # New destination flights
+    {"flightNumber": "IA340",  "departureDate": "2026-05-08", "routeId": "bdbfa99b-c663-49d4-8b9a-d87db860705e", "aircraftTailNumber": "C-FLAX", "scheduledDeparture": "2026-05-08T13:00:00Z", "scheduledArrival": "2026-05-08T18:20:00Z", "gate": "D18", "status": "SCHEDULED"},
+    {"flightNumber": "IA451",  "departureDate": "2026-05-08", "routeId": "e65ebf82-10b4-4300-a3e1-4918ea1d6112", "aircraftTailNumber": "C-FJFK", "scheduledDeparture": "2026-05-08T09:00:00Z", "scheduledArrival": "2026-05-08T10:15:00Z", "gate": "B21", "status": "ARRIVED"},
+    {"flightNumber": "IA562",  "departureDate": "2026-05-08", "routeId": "1528cb55-9ead-4ddc-b0cc-0fa4d056e2d7", "aircraftTailNumber": "C-FMIA", "scheduledDeparture": "2026-05-08T07:30:00Z", "scheduledArrival": "2026-05-08T10:30:00Z", "gate": "F09", "status": "ARRIVED"},
+    {"flightNumber": "IA673",  "departureDate": "2026-05-08", "routeId": "7b8805cc-df56-4b62-ba5d-36a4c4ffd5d1", "aircraftTailNumber": "C-FDEN", "scheduledDeparture": "2026-05-08T19:00:00Z", "scheduledArrival": "2026-05-08T22:15:00Z", "gate": "C14", "status": "SCHEDULED"},
+    {"flightNumber": "IA784",  "departureDate": "2026-05-08", "routeId": "729a7e74-bca1-4b3b-8b06-47f383a5cc53", "aircraftTailNumber": "C-FLHR", "scheduledDeparture": "2026-05-08T23:00:00Z", "scheduledArrival": "2026-05-09T06:55:00Z", "gate": "T12", "status": "SCHEDULED"},
+    {"flightNumber": "IA895",  "departureDate": "2026-05-08", "routeId": "a37b1c4c-4ef2-4392-bbaf-a3d2ab8f94c8", "aircraftTailNumber": "C-GJFK", "scheduledDeparture": "2026-05-08T08:00:00Z", "scheduledArrival": "2026-05-08T09:20:00Z", "gate": "E11", "status": "BOARDING"},
+    {"flightNumber": "IA146",  "departureDate": "2026-05-08", "routeId": "e7314122-49a9-45d9-b2f7-a818858006d9", "aircraftTailNumber": "C-FLAY", "scheduledDeparture": "2026-05-08T09:00:00Z", "scheduledArrival": "2026-05-08T11:15:00Z", "gate": "G05", "status": "SCHEDULED"},
+    {"flightNumber": "IA257",  "departureDate": "2026-05-08", "routeId": "dbcf4876-a24f-454b-a2c3-94196f8f6843", "aircraftTailNumber": "C-FDNV", "scheduledDeparture": "2026-05-08T14:00:00Z", "scheduledArrival": "2026-05-08T16:20:00Z", "gate": "G09", "status": "SCHEDULED"},
 ]
 
 _SEED_FREQUENT_FLYERS = {
@@ -500,6 +550,7 @@ def _reset_demo_data() -> None:
     today = date.today()
     d0 = today.isoformat()
     d1 = (today + timedelta(days=1)).isoformat()
+    d2 = (today + timedelta(days=2)).isoformat()
 
     AIRPORTS.clear()
     AIRPORTS.update(copy.deepcopy(_SEED_AIRPORTS))
@@ -510,24 +561,46 @@ def _reset_demo_data() -> None:
     FREQUENT_FLYERS.clear()
     FREQUENT_FLYERS.update(copy.deepcopy(_SEED_FREQUENT_FLYERS))
 
-    shifted_flights = _shift(_SEED_FLIGHTS, d0, d1)
+    shifted_flights = _shift(_SEED_FLIGHTS, d0, d1, d2)
     FLIGHTS.clear()
     FLIGHTS.update({(f["flightNumber"], f["departureDate"]): f for f in shifted_flights})
 
+    covered_route_days = {(f["routeId"], f["departureDate"]) for f in FLIGHTS.values()}
+    for day_str in (d0, d1, d2):
+        for route_id in _AUTO_ROUTE_IDS:
+            if (route_id, day_str) in covered_route_days:
+                continue
+            route = ROUTES[route_id]
+            dep = datetime.fromisoformat(day_str).replace(
+                hour=_AUTO_DEPARTURE_HOURS[route_id], tzinfo=timezone.utc
+            )
+            arr = dep + timedelta(minutes=route["blockTimeMinutes"])
+            flight_number = _AUTO_FLIGHT_NUMBERS[route_id]
+            FLIGHTS[(flight_number, day_str)] = {
+                "flightNumber": flight_number,
+                "departureDate": day_str,
+                "routeId": route_id,
+                "aircraftTailNumber": "C-FGEN",
+                "scheduledDeparture": dep.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "scheduledArrival": arr.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "gate": _AUTO_GATES[route_id],
+                "status": "SCHEDULED",
+            }
+
     BOOKINGS.clear()
-    BOOKINGS.update(_shift(copy.deepcopy(_SEED_BOOKINGS), d0, d1))
+    BOOKINGS.update(_shift(copy.deepcopy(_SEED_BOOKINGS), d0, d1, d2))
 
     SEAT_ASSIGNMENTS.clear()
     SEAT_ASSIGNMENTS.update(copy.deepcopy(_SEED_SEAT_ASSIGNMENTS))
 
     BAGS.clear()
-    BAGS.update(_shift(copy.deepcopy(_SEED_BAGS), d0, d1))
+    BAGS.update(_shift(copy.deepcopy(_SEED_BAGS), d0, d1, d2))
 
     BAG_EVENTS.clear()
-    BAG_EVENTS.update(_shift(copy.deepcopy(_SEED_BAG_EVENTS), d0, d1))
+    BAG_EVENTS.update(_shift(copy.deepcopy(_SEED_BAG_EVENTS), d0, d1, d2))
 
     LOST_BAGGAGE_CASES.clear()
-    LOST_BAGGAGE_CASES.update(_shift(copy.deepcopy(_SEED_LOST_BAGGAGE_CASES), d0, d1))
+    LOST_BAGGAGE_CASES.update(_shift(copy.deepcopy(_SEED_LOST_BAGGAGE_CASES), d0, d1, d2))
 
 
 _reset_demo_data()

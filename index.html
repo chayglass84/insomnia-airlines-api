@@ -337,12 +337,15 @@
         YYZ: [43.6777, -79.6248], YUL: [45.4706, -73.7408], YVR: [49.1967, -123.1815],
         SEA: [47.4490, -122.3094], SFO: [37.6213, -122.3790], ORD: [41.9742, -87.9073],
         IAH: [29.9902, -95.3368], IAD: [38.9531, -77.4565], BOS: [42.3656, -71.0096],
-        FLL: [26.0726, -80.1527]
+        FLL: [26.0726, -80.1527], LAX: [33.9416, -118.4085], JFK: [40.6413, -73.7781],
+        DEN: [39.8561, -104.6737], MIA: [25.7959, -80.2870], LHR: [51.4700, -0.4543]
       };
       var routes = [
         ['YYZ','SFO'], ['YYZ','ORD'], ['YYZ','IAD'], ['YYZ','BOS'], ['YYZ','YUL'],
         ['YUL','FLL'], ['YVR','SEA'], ['YVR','ORD'],
-        ['SFO','IAH'], ['ORD','IAH'], ['BOS','IAD']
+        ['SFO','IAH'], ['ORD','IAH'], ['BOS','IAD'],
+        ['YYZ','LAX'], ['YYZ','JFK'], ['YYZ','MIA'], ['YYZ','DEN'], ['YYZ','LHR'],
+        ['YUL','JFK'], ['YUL','MIA'], ['YVR','LAX'], ['YVR','DEN']
       ];
 
       var map = L.map('route-map', { zoomControl: true, scrollWheelZoom: false }).setView([40, -90], 3);

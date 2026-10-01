@@ -6,11 +6,11 @@ info:
     network, published routes, and scheduled flight instances.
 
     Insomnia Airlines operates two aircraft types — the **Airbus A320**
-    (narrow-body) and **Boeing 787** (wide-body) — and serves 10 major
-    North American airports: YYZ, YUL, YVR, SEA, SFO, ORD, IAH, IAD, BOS,
-    and FLL. The network has reasonable but not total connectivity, so not
-    every origin–destination pair is served; the served city-pairs are
-    exposed via the `/routes` resource.
+    (narrow-body) and **Boeing 787** (wide-body) — and serves 15 airports:
+    YYZ, YUL, YVR, SEA, SFO, ORD, IAH, IAD, BOS, FLL, LAX, JFK, DEN, MIA,
+    and LHR (its one transatlantic destination). The network has reasonable
+    but not total connectivity, so not every origin–destination pair is
+    served; the served city-pairs are exposed via the `/routes` resource.
 
     The fleet (individual airframes, maintenance state, etc.) is managed by
     the Operations team and is **not** in scope for this API — see the
