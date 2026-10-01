@@ -322,8 +322,8 @@ _SEED_AIRPORTS = {a["iataCode"]: a for a in [
     {"iataCode": "LAX", "name": "Los Angeles International Airport",               "city": "Los Angeles",     "country": "US", "timezone": "America/Los_Angeles"},
     {"iataCode": "JFK", "name": "John F. Kennedy International Airport",           "city": "New York",        "country": "US", "timezone": "America/New_York"},
     {"iataCode": "DEN", "name": "Denver International Airport",                    "city": "Denver",          "country": "US", "timezone": "America/Denver"},
-    {"iataCode": "MIA", "name": "Miami International Airport",                     "city": "Miami",           "country": "US", "timezone": "America/New_York"},
-    {"iataCode": "LHR", "name": "London Heathrow Airport",                         "city": "London",          "country": "GB", "timezone": "Europe/London"},
+    {"iataCode": "ATL", "name": "Hartsfield-Jackson Atlanta International Airport", "city": "Atlanta",         "country": "US", "timezone": "America/New_York"},
+    {"iataCode": "PHX", "name": "Phoenix Sky Harbor International Airport",        "city": "Phoenix",         "country": "US", "timezone": "America/Phoenix"},
 ]}
 
 _SEED_ROUTES = {r["id"]: r for r in [
@@ -353,27 +353,35 @@ _SEED_ROUTES = {r["id"]: r for r in [
     # New destinations (hub-and-spoke expansion)
     {"id": "bdbfa99b-c663-49d4-8b9a-d87db860705e", "origin": "YYZ", "destination": "LAX", "distanceNauticalMiles": 1980, "blockTimeMinutes": 320},
     {"id": "e65ebf82-10b4-4300-a3e1-4918ea1d6112", "origin": "YYZ", "destination": "JFK", "distanceNauticalMiles":  280, "blockTimeMinutes":  75},
-    {"id": "1528cb55-9ead-4ddc-b0cc-0fa4d056e2d7", "origin": "YYZ", "destination": "MIA", "distanceNauticalMiles": 1150, "blockTimeMinutes": 180},
     {"id": "7b8805cc-df56-4b62-ba5d-36a4c4ffd5d1", "origin": "YYZ", "destination": "DEN", "distanceNauticalMiles": 1300, "blockTimeMinutes": 195},
-    {"id": "729a7e74-bca1-4b3b-8b06-47f383a5cc53", "origin": "YYZ", "destination": "LHR", "distanceNauticalMiles": 3340, "blockTimeMinutes": 415},
     {"id": "a37b1c4c-4ef2-4392-bbaf-a3d2ab8f94c8", "origin": "YUL", "destination": "JFK", "distanceNauticalMiles":  300, "blockTimeMinutes":  80},
-    {"id": "4ce2cb29-8a93-4c12-a01a-62f5d92efbbd", "origin": "YUL", "destination": "MIA", "distanceNauticalMiles": 1480, "blockTimeMinutes": 220},
     {"id": "e7314122-49a9-45d9-b2f7-a818858006d9", "origin": "YVR", "destination": "LAX", "distanceNauticalMiles":  830, "blockTimeMinutes": 135},
     {"id": "dbcf4876-a24f-454b-a2c3-94196f8f6843", "origin": "YVR", "destination": "DEN", "distanceNauticalMiles":  860, "blockTimeMinutes": 140},
     # Reverse routes for new destinations
     {"id": "d1b13f2c-d79c-4489-83b1-53a1bcf41bfd", "origin": "LAX", "destination": "YYZ", "distanceNauticalMiles": 1980, "blockTimeMinutes": 320},
     {"id": "49fbc71c-c29e-4ac3-8d25-8dc024ae0a3d", "origin": "JFK", "destination": "YYZ", "distanceNauticalMiles":  280, "blockTimeMinutes":  75},
-    {"id": "ebd45b4e-74b3-4c25-a08d-75809934982f", "origin": "MIA", "destination": "YYZ", "distanceNauticalMiles": 1150, "blockTimeMinutes": 180},
     {"id": "8d36d6ed-62d2-41b0-9e9e-e7d48db66951", "origin": "DEN", "destination": "YYZ", "distanceNauticalMiles": 1300, "blockTimeMinutes": 195},
-    {"id": "14fb700b-b37e-4873-bf2f-90711af6a433", "origin": "LHR", "destination": "YYZ", "distanceNauticalMiles": 3340, "blockTimeMinutes": 415},
     {"id": "8e1eb880-129a-41e2-bb55-d67260eb20b3", "origin": "JFK", "destination": "YUL", "distanceNauticalMiles":  300, "blockTimeMinutes":  80},
-    {"id": "51719616-ab86-4ee1-bf5e-ded4e2d7f4b0", "origin": "MIA", "destination": "YUL", "distanceNauticalMiles": 1480, "blockTimeMinutes": 220},
     {"id": "1229624b-5b6d-45d0-8458-5354082d147e", "origin": "LAX", "destination": "YVR", "distanceNauticalMiles":  830, "blockTimeMinutes": 135},
     {"id": "c9b7305f-0a30-4a31-b51c-7c81cf5793a6", "origin": "DEN", "destination": "YVR", "distanceNauticalMiles":  860, "blockTimeMinutes": 140},
     # Hub-to-hub connector closing the YYZ/YUL/YVR triangle, so every spoke
     # can reach every other spoke via at most two hub connections.
     {"id": "a64e0499-0543-4e35-8adb-d9e6dfecfa33", "origin": "YYZ", "destination": "YVR", "distanceNauticalMiles": 2080, "blockTimeMinutes": 330},
     {"id": "5c12f6d4-031c-49c2-ab28-b7ae63921612", "origin": "YVR", "destination": "YYZ", "distanceNauticalMiles": 2080, "blockTimeMinutes": 330},
+    # ATL and PHX, each with a hub connection plus a spoke-spoke connection
+    {"id": "f0a1b2c3-4d5e-6f70-8192-a3b4c5d6e7f8", "origin": "YYZ", "destination": "ATL", "distanceNauticalMiles":  900, "blockTimeMinutes": 140},
+    {"id": "0b1c2d3e-5f60-7182-93a4-b5c6d7e8f9a0", "origin": "ATL", "destination": "YYZ", "distanceNauticalMiles":  900, "blockTimeMinutes": 140},
+    {"id": "1c2d3e4f-6071-8293-a4b5-c6d7e8f9a0b1", "origin": "ORD", "destination": "ATL", "distanceNauticalMiles":  590, "blockTimeMinutes": 105},
+    {"id": "2d3e4f50-7182-93a4-b5c6-d7e8f9a0b1c2", "origin": "ATL", "destination": "ORD", "distanceNauticalMiles":  590, "blockTimeMinutes": 105},
+    {"id": "3e4f5061-8293-a4b5-c6d7-e8f9a0b1c2d3", "origin": "YVR", "destination": "PHX", "distanceNauticalMiles": 1020, "blockTimeMinutes": 150},
+    {"id": "4f506172-93a4-b5c6-d7e8-f9a0b1c2d3e4", "origin": "PHX", "destination": "YVR", "distanceNauticalMiles": 1020, "blockTimeMinutes": 150},
+    {"id": "50617283-a4b5-c6d7-e8f9-a0b1c2d3e4f5", "origin": "LAX", "destination": "PHX", "distanceNauticalMiles":  330, "blockTimeMinutes":  70},
+    {"id": "61728394-b5c6-d7e8-f9a0-b1c2d3e4f5a6", "origin": "PHX", "destination": "LAX", "distanceNauticalMiles":  330, "blockTimeMinutes":  70},
+    # SEA and FLL each pick up a second connection so no airport is a dead end
+    {"id": "72839405-c6d7-e8f9-a0b1-c2d3e4f5a6b7", "origin": "SEA", "destination": "LAX", "distanceNauticalMiles":  830, "blockTimeMinutes": 135},
+    {"id": "8394051c-d7e8-f9a0-b1c2-d3e4f5a6b7c8", "origin": "LAX", "destination": "SEA", "distanceNauticalMiles":  830, "blockTimeMinutes": 135},
+    {"id": "9405162d-e8f9-a0b1-c2d3-e4f5a6b7c8d9", "origin": "YYZ", "destination": "FLL", "distanceNauticalMiles": 1140, "blockTimeMinutes": 180},
+    {"id": "a051627e-f9a0-b1c2-d3e4-f5a6b7c8d9e0", "origin": "FLL", "destination": "YYZ", "distanceNauticalMiles": 1140, "blockTimeMinutes": 180},
 ]}
 
 # Every route gets at least one flight on each of the 3 days in the demo
@@ -403,12 +411,12 @@ _SEED_FLIGHTS = [
     # New destination flights
     {"flightNumber": "IA340",  "departureDate": "2026-05-08", "routeId": "bdbfa99b-c663-49d4-8b9a-d87db860705e", "aircraftTailNumber": "C-FLAX", "scheduledDeparture": "2026-05-08T13:00:00Z", "scheduledArrival": "2026-05-08T18:20:00Z", "gate": "D18", "status": "SCHEDULED"},
     {"flightNumber": "IA451",  "departureDate": "2026-05-08", "routeId": "e65ebf82-10b4-4300-a3e1-4918ea1d6112", "aircraftTailNumber": "C-FJFK", "scheduledDeparture": "2026-05-08T09:00:00Z", "scheduledArrival": "2026-05-08T10:15:00Z", "gate": "B21", "status": "ARRIVED"},
-    {"flightNumber": "IA562",  "departureDate": "2026-05-08", "routeId": "1528cb55-9ead-4ddc-b0cc-0fa4d056e2d7", "aircraftTailNumber": "C-FMIA", "scheduledDeparture": "2026-05-08T07:30:00Z", "scheduledArrival": "2026-05-08T10:30:00Z", "gate": "F09", "status": "ARRIVED"},
     {"flightNumber": "IA673",  "departureDate": "2026-05-08", "routeId": "7b8805cc-df56-4b62-ba5d-36a4c4ffd5d1", "aircraftTailNumber": "C-FDEN", "scheduledDeparture": "2026-05-08T19:00:00Z", "scheduledArrival": "2026-05-08T22:15:00Z", "gate": "C14", "status": "SCHEDULED"},
-    {"flightNumber": "IA784",  "departureDate": "2026-05-08", "routeId": "729a7e74-bca1-4b3b-8b06-47f383a5cc53", "aircraftTailNumber": "C-FLHR", "scheduledDeparture": "2026-05-08T23:00:00Z", "scheduledArrival": "2026-05-09T06:55:00Z", "gate": "T12", "status": "SCHEDULED"},
     {"flightNumber": "IA895",  "departureDate": "2026-05-08", "routeId": "a37b1c4c-4ef2-4392-bbaf-a3d2ab8f94c8", "aircraftTailNumber": "C-GJFK", "scheduledDeparture": "2026-05-08T08:00:00Z", "scheduledArrival": "2026-05-08T09:20:00Z", "gate": "E11", "status": "BOARDING"},
     {"flightNumber": "IA146",  "departureDate": "2026-05-08", "routeId": "e7314122-49a9-45d9-b2f7-a818858006d9", "aircraftTailNumber": "C-FLAY", "scheduledDeparture": "2026-05-08T09:00:00Z", "scheduledArrival": "2026-05-08T11:15:00Z", "gate": "G05", "status": "SCHEDULED"},
     {"flightNumber": "IA257",  "departureDate": "2026-05-08", "routeId": "dbcf4876-a24f-454b-a2c3-94196f8f6843", "aircraftTailNumber": "C-FDNV", "scheduledDeparture": "2026-05-08T14:00:00Z", "scheduledArrival": "2026-05-08T16:20:00Z", "gate": "G09", "status": "SCHEDULED"},
+    {"flightNumber": "IA368",  "departureDate": "2026-05-08", "routeId": "f0a1b2c3-4d5e-6f70-8192-a3b4c5d6e7f8", "aircraftTailNumber": "C-FATL", "scheduledDeparture": "2026-05-08T08:30:00Z", "scheduledArrival": "2026-05-08T10:50:00Z", "gate": "D09", "status": "DEPARTED"},
+    {"flightNumber": "IA479",  "departureDate": "2026-05-08", "routeId": "3e4f5061-8293-a4b5-c6d7-e8f9a0b1c2d3", "aircraftTailNumber": "C-FPHX", "scheduledDeparture": "2026-05-08T11:00:00Z", "scheduledArrival": "2026-05-08T13:30:00Z", "gate": "G14", "status": "SCHEDULED"},
 ]
 
 _SEED_FREQUENT_FLYERS = {
