@@ -48,7 +48,7 @@ paths:
         - bookings
       summary: List bookings.
       description: Returns bookings, optionally filtered by status, frequent-flyer ID,
-        or flight.
+        contact email, or flight.
       operationId: listBookings
       parameters:
         - name: status
@@ -64,6 +64,16 @@ paths:
           schema:
             type: string
             pattern: ^FF[0-9]{6,10}$
+        - name: contactEmail
+          in: query
+          description: >-
+            Filter to bookings with this contact email (case-insensitive).
+            Lets a passenger who isn't a frequent-flyer member list their own
+            trips.
+          required: false
+          schema:
+            type: string
+            format: email
         - name: flightNumber
           in: query
           description: Filter to bookings with a segment on this flight number.

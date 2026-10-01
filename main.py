@@ -813,6 +813,7 @@ def list_bookings(
     status: Optional[BookingStatus] = None,
     frequentFlyerId: Optional[str] = None,
     flightNumber: Optional[str] = None,
+    contactEmail: Optional[str] = None,
     limit: int = Query(50, ge=1, le=200),
 ):
     results = list(BOOKINGS.values())
@@ -822,6 +823,8 @@ def list_bookings(
         results = [b for b in results if any(p.get("frequentFlyerId") == frequentFlyerId for p in b["passengers"])]
     if flightNumber:
         results = [b for b in results if any(s["flightNumber"] == flightNumber for s in b["segments"])]
+    if contactEmail:
+        results = [b for b in results if (b.get("contactEmail") or "").lower() == contactEmail.lower()]
     return results[:limit]
 
 @app.post("/bookings", response_model=Booking, status_code=201, tags=["bookings"])
